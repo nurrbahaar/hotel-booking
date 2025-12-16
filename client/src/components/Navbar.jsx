@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useClerk, UserButton, useUser } from '@clerk/clerk-react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useClerk, UserButton } from '@clerk/clerk-react';
+import { Link, useLocation } from 'react-router-dom';
 import { assets } from '../assets/assets';
+import { useAppContext } from '../conext/AppContext';
 
 const BookIcon = () => (
     <svg className='w-4 h-4 text-gray-700' aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -21,10 +22,12 @@ const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const { openSignIn } = useClerk();
-    const { user } = useUser();
 
-    const navigate = useNavigate(); //tanımlanmış navigate olması lazım 
     const location = useLocation(); // var
+
+    const { user, navigate, isOwner, setShowHotelReg } = useAppContext()
+
+    console.log("Navbar Render - User:", user ? "Logged In" : "Logged Out", "isOwner:", isOwner);
 
     useEffect(() => {
 
@@ -62,8 +65,15 @@ const Navbar = () => {
                         <div className={`${isScrolled ? "bg-gray-700" : "bg-white"} h-0.5 w-0 group-hover:w-full transition-all duration-300`} />
                     </a>
                 ))}
-                <button className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${isScrolled ? 'text-black' : 'text-white'} transition-all`} onClick={() => navigate('/owner')}>
-                    Panel
+
+                <button className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${isScrolled ? 'text-black' : 'text-white'} transition-all`} onClick={() => {
+                    if (user) {
+                        isOwner ? navigate('/owner') : setShowHotelReg(true)
+                    } else {
+                        openSignIn()
+                    }
+                }}>
+                    {isOwner ? "Panel" : "List your hotel"}
                 </button>
             </div>
 
@@ -131,14 +141,15 @@ const Navbar = () => {
 
                 {user ? (
                     <button
-                        onClick={() => {
-                            navigate('/my-bookings');
-                            setIsMenuOpen(false);
-                        }}
+
+                        onClick={() => isOwner ? navigate('/owner') : navigate('/list-room')}
+
                         className="flex items-center gap-2 border px-4 py-2 rounded-full transition-all"
                     >
+                        {isOwner ? "Dashboard" : "List your hotel"}
+
                         <BookIcon />
-                        My Bookings
+
                     </button>
                 ) : (
                     !user && < button onClick={openSignIn} className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
