@@ -59,6 +59,29 @@ export const createBooking = async (req, res) => {
             checkOutDate,
             totalPrice,
         });
+
+const mailOptions = {
+
+    from: process.env.SENDER_EMAIL,
+    to: req.user.email,
+    subject: "Hotel Booking details",
+    hmtl:`
+    <h2>Your booking details</h2>
+<p>Dear ${req.user.username},</p>
+<ul><li><strong>Booking ID: </strong>${booking._id}</li>
+<li><strong>Hotel Name: </strong>${roomData.hotel.name}</li>
+<li><strong>Location : </strong>${roomData.hotel.address}</li>
+<li><strong>Date : </strong>${booking.checkInDate.toDateString()}</li>
+<li><strong>Booking Amount: </strong>${process.env.CURRENCY || '$'} ${booking.totalPrice} /night</li>
+
+
+
+</ul> 
+`
+}
+
+        await transporter.senMail(mailOptions)
+
         res.json({ success: true, message: "Booking created successfully" });
 
 
