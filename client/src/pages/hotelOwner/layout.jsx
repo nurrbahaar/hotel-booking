@@ -1,14 +1,13 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import Navbar from '../../components/hotelOwner/Navbar'
 import Sidebar from '../../components/hotelOwner/Sidebar'
 import { Outlet } from 'react-router-dom'
-import { useApp } from 'react'
 import { useAppContext } from '../../conext/AppContext'
 
-const layout = () => {
+const Layout = () => {
     const { isOwner, navigate } = useAppContext()
 
-    use(() => {
+    useEffect(() => {
         if (!isOwner) {
             navigate('/')
         }
@@ -27,4 +26,4 @@ const layout = () => {
     )
 }
 
-export default layout
+export default Layout

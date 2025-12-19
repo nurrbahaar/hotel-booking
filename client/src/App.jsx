@@ -1,14 +1,14 @@
 import React from 'react'
 import Navbar from './components/Navbar.jsx'
 import { Routes, Route, useLocation } from "react-router-dom";
-import Hero from "./components/hero";
+import Hero from "./components/Hero"; 
 import Home from "./pages/Home";
 import Footer from './components/Footer.jsx';
 import AllRooms from './pages/AllRooms.jsx';
 import RoomDetails from './pages/RoomDetails.jsx';
 import MyBookings from './pages/MyBookings.jsx';
 import HotelReg from './components/HotelReg.jsx';
-import Layout from './pages/hotelOwner/layout.jsx'
+import Layout from './pages/hotelOwner/Layout.jsx' // Düzeltildi: layout.jsx -> Layout.jsx
 import Dashboard from './pages/hotelOwner/Dashboard.jsx'
 import AddRoom from './pages/hotelOwner/AddRoom.jsx'
 import ListRoom from './pages/hotelOwner/ListRoom.jsx'
