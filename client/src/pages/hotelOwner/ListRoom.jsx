@@ -1,10 +1,43 @@
-import React, { useState } from 'react'
+import React, { use, useEffect, useState } from 'react'
 import { roomsDummyData } from '../../assets/assets'
 import Title from '../../components/Title'
+import { useAppContext } from '../../conext/AppContext'
+import toast from 'react-hot-toast'
 
 const ListRoom = () => {
 
-    const [rooms, setRooms] = useState(roomsDummyData)
+    const [rooms, setRooms] = useState([])
+    const { axios, getToken, user, currency } = useAppContext()
+
+    //fetch rooms of the hotel owner
+    const fetchRooms = async () => {
+        try {
+            const { data } = await axios.get('/api/rooms/owner', { headers: { Authorization: `Bearer ${await getToken()}` } })
+            if (data.success) {
+                setRooms(data.rooms)
+            }
+            else {
+                toast.error(data.message)
+            }
+        } catch (error) {
+            toast.error(data.message)
+        }
+    }
+
+    const toggleAvalilability = async (roomId) => {
+        const { data } = await axios.post('/api/rooms/toggle-availability', { roomId }, { headers: { Authorization: `Bearer ${await getToken()}` } })
+        if (data.success) {
+            toast.success(data.message)
+            fetchRooms()
+        } else {
+            toast.error(data.message)
+        }
+    }
+    useEffect(() => {
+        if (user) {
+            fetchRooms()
+        }
+    }, [user])
 
     return (
         <div>
@@ -32,11 +65,12 @@ const ListRoom = () => {
                                     {Array.isArray(item.amenities) ? item.amenities.join(', ') : item.amenities}
                                 </td>
                                 <td className='py-3 px-4 text-gray-700 border-t border-gray-300 text-center'>
-                                    {item.pricePerNight}
+                                    {currency} {item.pricePerNight}
                                 </td>
                                 <td className='py-3 px-4 text-gray-700 border-t border-gray-300 text-center'>
                                     <label className='relative inline-flex items-center cursor-pointer text-gray-900 gap-3'>
                                         <input
+                                            onChange={() => toggleAvalilability(item._id)}
                                             type='checkbox'
                                             className='sr-only peer'
                                             checked={item.isAvailable}

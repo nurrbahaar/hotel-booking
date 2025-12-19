@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { roomsDummyData, assets, facilityIcons } from '../assets/assets';
+import React, { useState, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { assets, facilityIcons } from '../assets/assets';
 import StarRating from '../components/StarRating';
+import { useAppContext } from '../conext/AppContext';
 
 const CheckBox = ({ label, selected, onChange }) => {
     return (
@@ -31,19 +32,18 @@ const RadioButton = ({ label, selected, onChange }) => {
 }
 
 const AllRooms = () => {
-    const navigate = useNavigate();
-    const [openFilters, setOpenFilters] = useState(false);
+    const [searchParams, setSearchParams] = useSearchParams()
+    const { rooms, navigate, currency } = useAppContext();
 
+
+    const [openFilters, setOpenFilters] = useState(false);
     // --- FİLTRE STATE'LERİ ---
     const [selectedTypes, setSelectedTypes] = useState([]);
+    const [selectedPriceRanges, setSelectedPriceRanges] = useState([]);
     const [selectedSort, setSelectedSort] = useState('');
-    const [filteredRooms, setFilteredRooms] = useState([]);
 
     const roomTypes = ['Single Bed', 'Double Bed', 'Luxury Room', 'Family'];
-
-    // Fiyat aralıkları şimdilik görsel kalabilir veya mantık eklenebilir
     const priceRanges = ['$50 - $100', '$101 - $200', '$201 - $300', '$301 - $400', '$401+'];
-
     const sortOptions = [
         'Price: Low to High',
         'Price: High to Low',
@@ -51,12 +51,63 @@ const AllRooms = () => {
         'Rating: Low to High',
     ];
 
-    // Sayfa ilk açıldığında tüm odaları göster
-    useEffect(() => {
-        setFilteredRooms(roomsDummyData);
-    }, []);
+    // --- FILTERING LOGIC ---
+    const filteredRooms = useMemo(() => {
+        let tempRooms = rooms ? [...rooms] : [];
 
-    // --- FİLTRELEME FONKSİYONLARI ---
+        // 1. Filter by Destination (from URL)
+        const destination = searchParams.get('destination');
+        if (destination) {
+            tempRooms = tempRooms.filter(room =>
+                room.hotel?.city?.toLowerCase().includes(destination.toLowerCase()) ||
+                room.hotel?.name?.toLowerCase().includes(destination.toLowerCase())
+            );
+        }
+
+        // 2. Filter by Room Type
+        if (selectedTypes.length > 0) {
+            tempRooms = tempRooms.filter(room =>
+                selectedTypes.some(type => room.roomType.toLowerCase() === type.toLowerCase())
+            );
+        }
+
+        // 3. Filter by Price Range
+        if (selectedPriceRanges.length > 0) {
+            tempRooms = tempRooms.filter(room => {
+                return selectedPriceRanges.some(range => {
+                    if (range === '$401+') {
+                        return room.pricePerNight >= 401;
+                    }
+                    const parts = range.replace(/\$/g, '').split(' - ');
+                    const min = parseInt(parts[0]);
+                    const max = parseInt(parts[1]);
+                    return room.pricePerNight >= min && room.pricePerNight <= max;
+                });
+            });
+        }
+
+        // 4. Sort
+        if (selectedSort === 'Price: Low to High') {
+            tempRooms.sort((a, b) => a.pricePerNight - b.pricePerNight);
+        } else if (selectedSort === 'Price: High to Low') {
+            tempRooms.sort((a, b) => b.pricePerNight - a.pricePerNight);
+        } else if (selectedSort === 'Rating: High to Low') {
+            tempRooms.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        } else if (selectedSort === 'Rating: Low to High') {
+            tempRooms.sort((a, b) => (a.rating || 0) - (b.rating || 0));
+        }
+
+        return tempRooms;
+    }, [rooms, searchParams, selectedTypes, selectedPriceRanges, selectedSort]);
+
+    const clearFilters = () => {
+        setSelectedTypes([]);
+        setSelectedPriceRanges([]);
+        setSelectedSort('');
+        setSearchParams({});
+    };
+
+    // --- HANDLERS ---
     const handleTypeChange = (checked, label) => {
         if (checked) {
             setSelectedTypes([...selectedTypes, label]);
@@ -65,47 +116,17 @@ const AllRooms = () => {
         }
     };
 
+    const handlePriceChange = (checked, label) => {
+        if (checked) {
+            setSelectedPriceRanges([...selectedPriceRanges, label]);
+        } else {
+            setSelectedPriceRanges(selectedPriceRanges.filter(p => p !== label));
+        }
+    };
+
     const handleSortChange = (label) => {
         setSelectedSort(label);
     };
-
-    const clearFilters = () => {
-        setSelectedTypes([]);
-        setSelectedSort('');
-        setFilteredRooms(roomsDummyData);
-    };
-
-    // Her seçim değiştiğinde listeyi güncelle (useEffect)
-    useEffect(() => {
-        let tempRooms = [...roomsDummyData];
-
-        // 1. Oda Tipi Filtresi
-        // Not: Dummy datanızda 'type' alanı yoksa burası çalışmaz. 
-        // Geçici olarak otel isminde veya açıklamasında aratıyoruz:
-        if (selectedTypes.length > 0) {
-            tempRooms = tempRooms.filter(room =>
-                selectedTypes.some(type =>
-                    // room.type === type || // Eğer verinizde type varsa bunu açın
-                    room.hotel.name.includes(type) ||
-                    (room.description && room.description.includes(type))
-                )
-            );
-        }
-
-        // 2. Sıralama Mantığı
-        if (selectedSort === 'Price: Low to High') {
-            tempRooms.sort((a, b) => a.pricePerNight - b.pricePerNight);
-        } else if (selectedSort === 'Price: High to Low') {
-            tempRooms.sort((a, b) => b.pricePerNight - a.pricePerNight);
-        } else if (selectedSort === 'Rating: High to Low') {
-            tempRooms.sort((a, b) => b.rating - a.rating);
-        } else if (selectedSort === 'Rating: Low to High') {
-            tempRooms.sort((a, b) => a.rating - b.rating);
-        }
-
-        setFilteredRooms(tempRooms);
-
-    }, [selectedTypes, selectedSort]);
 
 
     return (
@@ -202,11 +223,16 @@ const AllRooms = () => {
                             ))}
                         </div>
 
-                        {/* Price Range (Visual Only for now) */}
-                        <div className='mb-6'>
-                            <p className='font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wider'>Price Range</p>
+                        {/* Price Range Filter */}
+                        <div className='px-5 pt-5'>
+                            <p className='font-medium text-gray-800 pb-2'>Price Range</p>
                             {priceRanges.map((range, index) => (
-                                <CheckBox key={index} label={range} selected={false} onChange={() => { }} />
+                                <CheckBox
+                                    key={index}
+                                    label={range}
+                                    selected={selectedPriceRanges.includes(range)}
+                                    onChange={handlePriceChange}
+                                />
                             ))}
                         </div>
 
