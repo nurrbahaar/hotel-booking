@@ -35,6 +35,7 @@ const AllRooms = () => {
     const [searchParams, setSearchParams] = useSearchParams()
     const { rooms, navigate, currency } = useAppContext();
 
+    console.log("AllRooms - rooms:", rooms);
 
     const [openFilters, setOpenFilters] = useState(false);
     // --- FİLTRE STATE'LERİ ---
@@ -54,6 +55,9 @@ const AllRooms = () => {
     // --- FILTERING LOGIC ---
     const filteredRooms = useMemo(() => {
         let tempRooms = rooms ? [...rooms] : [];
+
+        // Filter out rooms with missing hotel data
+        tempRooms = tempRooms.filter(room => room.hotel);
 
         // 1. Filter by Destination (from URL)
         const destination = searchParams.get('destination');
@@ -154,9 +158,9 @@ const AllRooms = () => {
                             />
 
                             <div className='w-full md:w-1/2 flex flex-col gap-2'>
-                                <p className='text-gray-500 text-sm'>{room.hotel.city}</p>
+                                <p className='text-gray-500 text-sm'>{room.hotel?.city || 'Unknown City'}</p>
                                 <p onClick={() => { navigate(`/rooms/${room._id}`); window.scrollTo(0, 0); }} className='text-gray-800 text-2xl md:text-3xl font-playfair cursor-pointer hover:text-indigo-600 transition-colors'>
-                                    {room.hotel.name}
+                                    {room.hotel?.name || 'Unknown Hotel'}
                                 </p>
 
                                 <div className='flex items-center'>
@@ -166,7 +170,7 @@ const AllRooms = () => {
 
                                 <div className='flex items-center gap-1 text-gray-500 mt-2 text-sm'>
                                     <img src={assets.locationIcon} alt="location-icon" className='w-4 h-4' />
-                                    <span> {room.hotel.address}</span>
+                                    <span> {room.hotel?.address || 'No Address'}</span>
                                 </div>
 
                                 <div className='flex flex-wrap items-center mt-3 mb-4 gap-3'>
@@ -224,8 +228,8 @@ const AllRooms = () => {
                         </div>
 
                         {/* Price Range Filter */}
-                        <div className='px-5 pt-5'>
-                            <p className='font-medium text-gray-800 pb-2'>Price Range</p>
+                        <div className='mb-6'>
+                            <p className='font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wider'>Price Range</p>
                             {priceRanges.map((range, index) => (
                                 <CheckBox
                                     key={index}
@@ -244,7 +248,7 @@ const AllRooms = () => {
                                     key={index}
                                     label={option}
                                     selected={selectedSort === option}
-                                    onChange={handleSortChange}
+                                    onChange={() => handleSortChange(option)}
                                 />
                             ))}
                         </div>

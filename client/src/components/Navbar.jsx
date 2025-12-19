@@ -27,8 +27,6 @@ const Navbar = () => {
 
     const { user, navigate, isOwner, setShowHotelReg } = useAppContext()
 
-    console.log("Navbar Render - User:", user ? "Logged In" : "Logged Out", "isOwner:", isOwner);
-
     useEffect(() => {
 
         if (location.pathname !== '/') {
