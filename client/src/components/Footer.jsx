@@ -8,7 +8,7 @@ const Footer = () => {
             <div className='flex flex-wrap justify-between gap-12 md:gap-6'>
                 <div className='max-w-80'>
                     { /* burdaki logoyu kaldırıcam yerine roomy logosu yapıcam */}
-                    <img src={assets.logo} alt="logo" className='mb-4 h-8 md:h-9 invert opacity-80 ' />
+                    <h1 className='text-3xl font-bold text-gray-800 mb-4'>Roomy</h1>
                     <p className='text-sm'>
                         ne desem ne desem</p>
                     <div className='flex items-center gap-3 mt-4'>

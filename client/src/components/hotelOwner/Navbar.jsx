@@ -8,7 +8,9 @@ const Navbar = () => {
     return (
         <div className='flex items-center justify-between px-4 md:px-8 border-b border-gray-300 py-3 bg-white transition-all dration-300' >
             <Link to='/' >
-                <img src={assets.logo} alt='logo' className='h-9 invert opacity-80' />
+                <span className='text-3xl font-black tracking-tight text-black'>
+                    ROOMY
+                </span>
             </Link>
             <UserButton />
         </div>

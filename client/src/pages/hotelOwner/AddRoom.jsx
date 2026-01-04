@@ -133,7 +133,7 @@ const AddRoom = () => {
                     />
                 </div>
             </div>
-            <p className='text-gray-800 flex-wrap mt-1 text-gray-400 max-w-sm'>
+            <div className='text-gray-800 flex-wrap mt-1 text-gray-400 max-w-sm'>
                 {Object.keys(inputs.amenities).map((amenity, index) => (
                     <div key={index}>
                         <input
@@ -153,7 +153,7 @@ const AddRoom = () => {
                         <label htmlFor={`amenities${index + 1}`}>{amenity}</label>
                     </div>
                 ))}
-            </p>
+            </div>
             <button className='bg-primary text-white  px-8 py-2 rounded mt-8 cursor-pointer'
                 disabled={loading}>
                 {loading ? 'Adding...' : 'Add Room'}

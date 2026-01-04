@@ -1,15 +1,34 @@
+import User from "../models/User.js";
+import Role from "../models/Role.js";
+
 // get /api/user
 
 export const getUserData = async (req, res) => {
     try {
-        const role = req.user.role;
+        let roles = req.user.roles || [];
+        
+        // Backward compatibility: If no roles found but legacy role exists
+        if (roles.length === 0 && req.user.role) {
+             roles = [{ name: req.user.role }];
+        }
+
         const recentSearchedCities = req.user.recentSearchedCities;
-        res.json({ success: true, role, recentSearchedCities })
+        res.json({ success: true, roles, recentSearchedCities }) 
 
     }
     catch (error) {
 
         res.json({ success: false, message: error.message })
+    }
+}
+
+// Get all users (Admin only)
+export const getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find({}).populate('roles');
+        res.json({ success: true, users });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
     }
 }
 
@@ -31,5 +50,26 @@ export const storeRecentSearchedCities = async (req, res) => {
     }
     catch (error) {
         res.json({ success: false, message: error.message })
+    }
+}
+
+// Temporary: Make me admin
+export const makeMeAdmin = async (req, res) => {
+    try {
+        const user = await req.user;
+        let adminRole = await Role.findOne({ name: "admin" });
+        
+        if (!adminRole) {
+            adminRole = await Role.create({ name: "admin", description: "Administrator" });
+        }
+
+        if (!user.roles.includes(adminRole._id)) {
+            user.roles.push(adminRole._id);
+            await user.save();
+        }
+
+        res.json({ success: true, message: "You are now an admin!" });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
     }
 }

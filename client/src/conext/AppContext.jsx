@@ -15,11 +15,15 @@ export const AppProvider = ({ children }) => {
     const { getToken } = useAuth()
 
     const [isOwner, setIsOwner] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [userDataLoaded, setUserDataLoaded] = useState(false);
     const [showHotelReg, setShowHotelReg] = useState(false);
     const [searchedCities, setSearchedCities] = useState([]);
     const [rooms, setRooms] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     const fetchRooms = async () => {
+        setLoading(true);
         try {
             const { data } = await axios.get('/api/rooms');
             if (data?.success) {
@@ -32,24 +36,37 @@ export const AppProvider = ({ children }) => {
         }
         catch (error) {
             toast.error(error.message)
+        } finally {
+            setLoading(false);
         }
     }
 
-    const fetchUser = async () => {
+    const fetchUser = async (retryCount = 0) => {
         try {
             const token = await getToken();
             const { data } = await axios.get('/api/users', { headers: { Authorization: `Bearer ${token}` } });
             if (data?.success) {
-                setIsOwner(data.role === 'hotelOwner');
-                setSearchedCities(data.recentSearchedCities)
+                // Handle new roles array structure
+                const roles = data.roles || [];
+                setIsOwner(roles.some(r => r.name === 'hotelOwner'));
+                setIsAdmin(roles.some(r => r.name === 'admin'));
+                
+                setSearchedCities(data.recentSearchedCities);
+                setUserDataLoaded(true);
             }
             else {
-                setTimeout(() => {
-                    fetchUser();
-                }, 5000)
+                if (retryCount < 3) {
+                    setTimeout(() => {
+                        fetchUser(retryCount + 1);
+                    }, 2000)
+                } else {
+                    toast.error("Failed to load user data: " + data.message);
+                    setUserDataLoaded(true);
+                }
             }
         } catch (error) {
             toast.error(error.message)
+            setUserDataLoaded(true);
         }
 
     }
@@ -66,10 +83,10 @@ export const AppProvider = ({ children }) => {
 
 
     const value = {
-        currency,
+        currency,isAdmin, setIsAdmin, userDataLoaded, 
         navigate,
         user, getToken, isOwner, setIsOwner, axios, showHotelReg, setShowHotelReg,
-        searchedCities, setSearchedCities, rooms, setRooms
+        searchedCities, setSearchedCities, rooms, setRooms, loading
     }
 
 

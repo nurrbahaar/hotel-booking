@@ -12,18 +12,23 @@ import Layout from './pages/hotelOwner/Layout.jsx' // Düzeltildi: layout.jsx -> 
 import Dashboard from './pages/hotelOwner/Dashboard.jsx'
 import AddRoom from './pages/hotelOwner/AddRoom.jsx'
 import ListRoom from './pages/hotelOwner/ListRoom.jsx'
+import AdminLayout from './pages/admin/AdminLayout.jsx'
+import AdminDashboard from './pages/admin/AdminDashboard.jsx'
+import PendingHotels from './pages/admin/PendingHotels.jsx'
+import UserList from './pages/admin/UserList.jsx'
 import { Toaster } from 'react-hot-toast';
 import { useAppContext } from './conext/AppContext';
 
 const App = () => {
   const location = useLocation();
   const isOwnerPath = location.pathname.includes('owner');
+  const isAdminPath = location.pathname.includes('admin');
   const { showHotelReg } = useAppContext();
 
   return (
     <div>
       <Toaster />
-      {!isOwnerPath && <Navbar />}
+      {!isOwnerPath && !isAdminPath && <Navbar />}
 
       {showHotelReg && <HotelReg />}
 
@@ -40,10 +45,17 @@ const App = () => {
             <Route path='add-room' element={<AddRoom />} />
             <Route path='list-room' element={<ListRoom />} />
           </Route>
+
+          {/* Admin routes - nested */}
+          <Route path='/admin' element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path='pending-hotels' element={<PendingHotels />} />
+            <Route path='users' element={<UserList />} />
+          </Route>
         </Routes>
         {/* Other components and routes would go here */}
       </div>
-      <Footer />
+      {!isAdminPath && <Footer />}
     </div>
   )
 }

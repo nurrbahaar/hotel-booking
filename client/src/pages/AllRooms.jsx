@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { assets, facilityIcons } from '../assets/assets';
 import StarRating from '../components/StarRating';
 import { useAppContext } from '../conext/AppContext';
+import RoomListSkeleton from '../components/RoomListSkeleton';
 
 const CheckBox = ({ label, selected, onChange }) => {
     return (
@@ -33,7 +34,7 @@ const RadioButton = ({ label, selected, onChange }) => {
 
 const AllRooms = () => {
     const [searchParams, setSearchParams] = useSearchParams()
-    const { rooms, navigate, currency } = useAppContext();
+    const { rooms, navigate, currency, loading } = useAppContext();
 
     console.log("AllRooms - rooms:", rooms);
 
@@ -146,9 +147,13 @@ const AllRooms = () => {
                 </div>
 
                 {/* FİLTRELENMİŞ LİSTE DÖNGÜSÜ */}
-                {filteredRooms.length > 0 ? (
-                    filteredRooms.map((room) => (
-                        <div key={room._id} className='my-8 flex flex-col md:flex-row items-center gap-6 border-b border-gray-100 pb-8 last:border-0'>
+                {loading ? (
+                    [1, 2, 3].map((i) => <RoomListSkeleton key={i} />)
+                ) : filteredRooms.length > 0 ? (
+                    filteredRooms.map((room, index) => (
+                        <div key={room._id} 
+                             style={{ animationDelay: `${index * 0.1}s` }}
+                             className='my-8 flex flex-col md:flex-row items-center gap-6 border-b border-gray-100 pb-8 last:border-0 animate-fade-in-up opacity-0'>
                             <img
                                 onClick={() => { navigate(`/rooms/${room._id}`); window.scrollTo(0, 0); }}
                                 src={room.images[0]}
@@ -170,7 +175,11 @@ const AllRooms = () => {
 
                                 <div className='flex items-center gap-1 text-gray-500 mt-2 text-sm'>
                                     <img src={assets.locationIcon} alt="location-icon" className='w-4 h-4' />
-                                    <span> {room.hotel?.address || 'No Address'}</span>
+                                    <span> {(() => {
+                                        const address = room.hotel?.address;
+                                        const addressText = address?.city || address?.line || (typeof address === 'string' ? address : '') || 'No Address';
+                                        return addressText.replace(/^\?stanbul/i, '�stanbul').replace(/^stanbul/i, '�stanbul');
+                                    })()}</span>
                                 </div>
 
                                 <div className='flex flex-wrap items-center mt-3 mb-4 gap-3'>
@@ -182,7 +191,7 @@ const AllRooms = () => {
                                     ))}
                                 </div>
                                 <div className='flex items-center justify-between mt-2'>
-                                    <p className='text-xl font-medium text-gray-800'> ${room.pricePerNight} <span className='text-sm text-gray-500 font-normal'>/night</span> </p>
+                                    <p className='text-xl font-medium text-gray-800'> {room.pricePerNight} TL <span className='text-sm text-gray-500 font-normal'>/night</span> </p>
                                     <button onClick={() => navigate(`/rooms/${room._id}`)} className='bg-black text-white px-4 py-2 rounded-full text-sm hover:bg-gray-800 transition-colors'>
                                         View Details
                                     </button>

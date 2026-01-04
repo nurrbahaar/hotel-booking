@@ -1,24 +1,32 @@
 import Hotel from "../models/Hotel.js";
 import { v2 as cloudinary } from "cloudinary";
 import Room from "../models/Room.js";
+import fs from 'fs';
 
 
 export const createRoom = async (req, res) => {
     try {
-        const { roomType, pricePerNight, amenities } = req.body;
+        const { roomType, pricePerNight, amenities, capacityAdults, capacityChildren, description } = req.body;
         const hotel = await Hotel.findOne({ owner: req.auth.userId })
 
         if (!hotel) return res.json({ success: false, message: "No hotel found for this owner" })
-        const uploadImages = req.files.map(async (file) => {
+
+        const images = await Promise.all(req.files.map(async (file) => {
             const response = await cloudinary.uploader.upload(file.path);
+            // Delete local file after upload
+            fs.unlinkSync(file.path);
             return response.secure_url;
-        })
-        const images = await Promise.all(uploadImages);
+        }));
 
         await Room.create({
             hotel: hotel._id,
             roomType,
-            pricePerNight: +pricePerNight,
+            description,
+            pricePerNight: +pricePerNight, // Reverted to pricePerNight
+            capacity: {
+                adults: capacityAdults ? +capacityAdults : 2,
+                children: capacityChildren ? +capacityChildren : 0
+            },
             amenities: JSON.parse(amenities),
             images,
         })
@@ -35,16 +43,21 @@ export const getRoom = async (req, res) => {
     try {
         const rooms = await Room.find({ isAvailable: true }).populate({
             path: "hotel",
+            match: { isApproved: true }, // Only populate if hotel is approved
             populate: {
                 path: "owner",
                 select: 'image'
             }
-        }).sort({ createdAt: -1 })
-        res.json({ success: true, rooms });
+        }).sort({ createdAt: -1 });
+
+        // Filter out rooms where hotel is null (because it wasn't approved)
+        const approvedRooms = rooms.filter(room => room.hotel !== null);
+
+        res.json({ success: true, rooms: approvedRooms });
 
 
     } catch (error) {
-        res.JSON({ success: false, message: error.message });
+        res.json({ success: false, message: error.message });
     }
 }
 
@@ -52,6 +65,11 @@ export const getRoom = async (req, res) => {
 export const getOwnerRooms = async (req, res) => {
     try {
         const hotelData = await Hotel.findOne({ owner: req.auth.userId })
+        
+        if (!hotelData) {
+            return res.json({ success: true, rooms: [] });
+        }
+
         const rooms = await Room.find({ hotel: hotelData._id.toString() }).populate("hotel");
         res.json({ success: true, rooms });
     } catch (error) {

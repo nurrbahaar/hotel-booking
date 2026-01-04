@@ -3,14 +3,17 @@ import Title from '../components/Title.jsx'
 import { userBookingsDummyData, assets } from '../assets/assets'
 import { useAppContext } from '../conext/AppContext.jsx';
 import toast from 'react-hot-toast';
+import MyBookingsSkeleton from '../components/MyBookingsSkeleton.jsx';
 
 const MyBookings = () => {
 
   const {axios, getToken, user} = useAppContext();
   const [bookings, setBookings] = useState( [])
+  const [loading, setLoading] = useState(true);
 
   const fetchBookings = async () => {
     try {
+      setLoading(true);
       const {data} = await axios.get('/api/bookings/user', {headers: {Authorization: `Bearer ${await getToken()}`}})
       if(data?.success){
         setBookings(data.bookings);
@@ -20,12 +23,19 @@ const MyBookings = () => {
       }
     } catch (error) {
       toast.error(error.message)
-    }}
+    } finally {
+      setLoading(false);
+    }
+  }
 
     useEffect(() => {
       if(user){
-        fetchUserBookings();
+        fetchBookings();
       } }, [user])
+
+  if (loading) {
+    return <MyBookingsSkeleton />
+  }
 
   return (
     <div className='py-28 md:py-32 px-4 md:px-24 xl:px-32'>

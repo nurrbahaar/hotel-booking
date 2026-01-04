@@ -3,6 +3,7 @@ import { useClerk, UserButton } from '@clerk/clerk-react';
 import { Link, useLocation } from 'react-router-dom';
 import { assets } from '../assets/assets';
 import { useAppContext } from '../conext/AppContext';
+import { toast } from 'react-hot-toast';
 
 const BookIcon = () => (
     <svg className='w-4 h-4 text-gray-700' aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -25,7 +26,7 @@ const Navbar = () => {
 
     const location = useLocation(); // var
 
-    const { user, navigate, isOwner, setShowHotelReg } = useAppContext()
+    const { user, navigate, isOwner, setShowHotelReg, isAdmin, getToken, axios } = useAppContext()
 
     useEffect(() => {
 
@@ -94,9 +95,14 @@ const Navbar = () => {
                         </UserButton.MenuItems>
                     </UserButton>
                 ) : (
-                    <button onClick={openSignIn} className={`px-8 py-2.5 rounded-full ml-4 transition-all duration-500 ${isScrolled ? "text-white bg-black" : "bg-white text-black"}`}>
-                        GiriÅŸ yap
-                    </button>
+                    <div className='flex items-center gap-2'>
+                        <button onClick={() => openSignIn({ forceRedirectUrl: '/owner' })} className={`text-sm font-medium hover:underline cursor-pointer ${isScrolled ? "text-gray-700" : "text-white"}`}>
+                            Otel Sahibi Giriþi
+                        </button>
+                        <button onClick={openSignIn} className={`px-8 py-2.5 rounded-full ml-4 transition-all duration-500 ${isScrolled ? "text-white bg-black" : "bg-white text-black"}`}>
+                            Giriþ yap
+                        </button>
+                    </div>
                 )}
             </div>
 
@@ -140,7 +146,10 @@ const Navbar = () => {
                 {user ? (
                     <button
 
-                        onClick={() => isOwner ? navigate('/owner') : navigate('/list-room')}
+                        onClick={() => {
+                            setIsMenuOpen(false);
+                            isOwner ? navigate('/owner') : setShowHotelReg(true);
+                        }}
 
                         className="flex items-center gap-2 border px-4 py-2 rounded-full transition-all"
                     >

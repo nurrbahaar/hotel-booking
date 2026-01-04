@@ -5,13 +5,19 @@ import { Outlet } from 'react-router-dom'
 import { useAppContext } from '../../conext/AppContext'
 
 const Layout = () => {
-    const { isOwner, navigate } = useAppContext()
+    const { isOwner, navigate, userDataLoaded } = useAppContext()
 
     useEffect(() => {
-        if (!isOwner) {
+        // Redirect if not owner
+        if (userDataLoaded && !isOwner) {
             navigate('/')
         }
-    }, [isOwner])
+    }, [isOwner, userDataLoaded])
+
+    if (!userDataLoaded) {
+        return <div className="flex items-center justify-center h-screen">Loading...</div>
+    }
+
     return (
         <div className='flex flex-col h-screen'>
             <Navbar />

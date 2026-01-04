@@ -1,10 +1,11 @@
-import React, { use, useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Title from '../../components/Title'
 import { assets, dashboardDummyData } from '../../assets/assets'
 import { useAppContext } from '../../conext/AppContext'
+import { toast } from 'react-hot-toast'
 
 const Dashboard = () => {
-    const { currency, user, getToken, toast, axios } = useAppContext();
+    const { currency, user, getToken, axios } = useAppContext();
 
 
     const [dashboarData, setDashboardData] = useState({
@@ -56,7 +57,8 @@ const Dashboard = () => {
                         </div>
                     </div>
                 </div>
-                <h2 className='text-xl text-blue-950/70 font-medium mb-5'>Recent Booking</h2>
+            </div>
+            <h2 className='text-xl text-blue-950/70 font-medium mb-5'>Recent Booking</h2>
                 <div className='w-full max-w-3xl text-left border border-gray-300 rounded-lg max-h-80 overflow-y-scroll'>
                     <table className='w-full'>
                         <thead className='bg-gray-100 sticky top-0'>
@@ -97,7 +99,6 @@ const Dashboard = () => {
                         </tbody>
                     </table>
                 </div>
-            </div>
 
         </div>
     )

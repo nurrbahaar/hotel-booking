@@ -7,21 +7,24 @@ export const protect = async (req, res, next) => {
             return res.json({ success: false, message: "Not authorized" })
         }
 
-        let user = await User.findById(userId);
+        let user = await User.findById(userId).populate('roles');
 
         if (!user) {
             try {
-                // KullanÄ±cÄ± yoksa oluÅŸtur (GeÃ§ici Ã§Ã¶zÃ¼m)
+                // Kullanýcý yoksa oluþtur (Geçici çözüm)
                 user = await User.create({
                     _id: userId,
                     email: "temp_email@example.com",
                     username: "New User",
-                    image: "https://via.placeholder.com/150"
+                    image: "https://via.placeholder.com/150",
+                    recentSearchedCities: []
                 });
+                // Re-fetch to populate roles if needed (though new user probably has no roles)
+                user = await User.findById(userId).populate('roles');
             } catch (createError) {
-                // EÄŸer oluÅŸtururken duplicate key hatasÄ± alÄ±rsak (kullanÄ±cÄ± zaten varsa), tekrar bulmayÄ± dene
+                // Eðer oluþtururken duplicate key hatasý alýrsak (kullanýcý zaten varsa), tekrar bulmayý dene
                 if (createError.code === 11000) {
-                    user = await User.findById(userId);
+                    user = await User.findById(userId).populate('roles');
                 } else {
                     throw createError;
                 }
@@ -32,5 +35,20 @@ export const protect = async (req, res, next) => {
         next();
     } catch (error) {
         res.json({ success: false, message: error.message })
+    }
+}
+
+export const isAdmin = async (req, res, next) => {
+    try {
+        // req.user is populated by the protect middleware
+        const hasAdminRole = req.user?.roles?.some(role => role.name === 'admin');
+        const hasLegacyAdminRole = req.user?.role === 'admin';
+
+        if (!hasAdminRole && !hasLegacyAdminRole) {
+            return res.json({ success: false, message: "Admin access required" });
+        }
+        next();
+    } catch (error) {
+        res.json({ success: false, message: error.message });
     }
 }

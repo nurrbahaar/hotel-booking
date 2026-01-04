@@ -24,7 +24,7 @@ const clerkWebhooks = async (req, res) => {
             username: data.first_name + " " + data.last_name,
             image: data.image_url,
         }
-                await user.create(userData);
+                await user.findByIdAndUpdate(data.id, userData, { upsert: true, new: true });
                 break;
             }
             case "user.updated": {

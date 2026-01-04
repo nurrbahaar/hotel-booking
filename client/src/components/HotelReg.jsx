@@ -45,7 +45,7 @@ const HotelReg = () => {
     }
 
     return (
-        <div onClick={() => setShowHotelReg(false)} className='fixed inset-0 flex justify-center items-center min-h-screen bg-black/50 px-4 z-50'>
+        <div onClick={() => setShowHotelReg(false)} className='fixed inset-0 flex justify-center items-center min-h-screen bg-black/50 px-4 z-[1000]'>
             <form onSubmit={onSubmitHandler} onClick={(e) => e.stopPropagation()} className='flex bg-white rounded-xl max-w-4xl max-md:mx-2 relative'>
                 <img src={assets.regImage} alt="reg-img" className='w-1/2 rounded-xl hidden md:block' />
 
