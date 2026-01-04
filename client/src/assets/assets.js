@@ -75,10 +75,7 @@ export const assets = {
 }
 
 export const cities = [
-    "Adana",
-    "Ankara",
-    "İstanbul",
-    "Antalya",
+    "Adana", "Adiyaman", "Afyonkarahisar", "Agri", "Aksaray", "Amasya", "Ankara", "Antalya", "Ardahan", "Artvin", "Aydin", "Balikesir", "Bartin", "Batman", "Bayburt", "Bilecik", "Bingol", "Bitlis", "Bolu", "Burdur", "Bursa", "Canakkale", "Cankiri", "Corum", "Denizli", "Diyarbakir", "Duzce", "Edirne", "Elazig", "Erzincan", "Erzurum", "Eskisehir", "Gaziantep", "Giresun", "Gumushane", "Hakkari", "Hatay", "Igdir", "Isparta", "Istanbul", "Izmir", "Kahramanmaras", "Karabuk", "Karaman", "Kars", "Kastamonu", "Kayseri", "Kilis", "Kirikkale", "Kirklareli", "Kirsehir", "Kocaeli", "Konya", "Kutahya", "Malatya", "Manisa", "Mardin", "Mersin", "Mugla", "Mus", "Nevsehir", "Nigde", "Ordu", "Osmaniye", "Rize", "Sakarya", "Samsun", "Sanliurfa", "Siirt", "Sinop", "Sirnak", "Sivas", "Tekirdag", "Tokat", "Trabzon", "Tunceli", "Usak", "Van", "Yalova", "Yozgat", "Zonguldak"
 ];
 
 // Exclusive Offers Dummy Data
@@ -102,14 +99,20 @@ export const facilityIcons = {
     "Room Service": assets.roomServiceIcon,
     "Mountain View": assets.mountainIcon,
     "Pool Access": assets.poolIcon,
+    // Mappings for seed data
+    "WiFi": assets.freeWifiIcon,
+    "TV": assets.homeIcon, // Placeholder
+    "Air Conditioning": assets.mountainIcon, // Placeholder for cool air
+    "Mini Bar": assets.roomServiceIcon,
+    "View": assets.locationFilledIcon
 };
 
 // For Room Details Page
 export const roomCommonData = [
-    { icon: assets.homeIcon, title: "Clean & Safe Stay", description: "A well-maintained and hygienic space just for you." },
-    { icon: assets.badgeIcon, title: "Enhanced Cleaning", description: "This host follows Staybnb's strict cleaning standards." },
-    { icon: assets.locationFilledIcon, title: "Excellent Location", description: "90% of guests rated the location 5 stars." },
-    { icon: assets.heartIcon, title: "Smooth Check-In", description: "100% of guests gave check-in a 5-star rating." },
+    { icon: assets.homeIcon, title: "Temiz ve Guvenli Konaklama", description: "Sizin icin bakimli ve hijyenik bir alan." },
+    { icon: assets.badgeIcon, title: "Gelismis Temizlik", description: "Bu ev sahibi Roomy'nin siki temizlik standartlarina uyar." },
+    { icon: assets.locationFilledIcon, title: "Mukemmel Konum", description: "Misafirlerin %90'i konuma 5 yildiz verdi." },
+    { icon: assets.heartIcon, title: "Sorunsuz Giris", description: "Misafirlerin %100'u giris islemine 5 yildiz verdi." },
 ];
 
 // User Dummy Data

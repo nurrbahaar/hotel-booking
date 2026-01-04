@@ -15,8 +15,7 @@ const Navbar = () => {
     const navLinks = [
         { name: 'Anasayfa', path: '/' },
         { name: 'Oteller', path: '/Odalar' },
-        { name: 'Deneyim', path: '/' },
-        { name: 'HakkÄ±nda', path: '/' },
+        { name: 'Deneyim', path: '/deneyim' },
     ];
 
     const [isScrolled, setIsScrolled] = useState(false);
@@ -72,18 +71,12 @@ const Navbar = () => {
                         openSignIn()
                     }
                 }}>
-                    {isOwner ? "Panel" : "List your hotel"}
+                    {isOwner ? "Panel" : "Register your hotel"}
                 </button>
             </div>
 
             {/* Desktop Right */}
             <div className="hidden md:flex items-center gap-4">
-                <img
-                    src={assets.searchIcon}
-                    alt="search"
-                    className={`${isScrolled ? 'invert' : ''} h-7 transition-all duration-500`}
-                />
-
                 {user ? (
                     <UserButton>
                         <UserButton.MenuItems>
@@ -96,11 +89,8 @@ const Navbar = () => {
                     </UserButton>
                 ) : (
                     <div className='flex items-center gap-2'>
-                        <button onClick={() => openSignIn({ forceRedirectUrl: '/owner' })} className={`text-sm font-medium hover:underline cursor-pointer ${isScrolled ? "text-gray-700" : "text-white"}`}>
-                            Otel Sahibi Giriþi
-                        </button>
                         <button onClick={openSignIn} className={`px-8 py-2.5 rounded-full ml-4 transition-all duration-500 ${isScrolled ? "text-white bg-black" : "bg-white text-black"}`}>
-                            Giriþ yap
+                            Giris Yap
                         </button>
                     </div>
                 )}
@@ -153,14 +143,14 @@ const Navbar = () => {
 
                         className="flex items-center gap-2 border px-4 py-2 rounded-full transition-all"
                     >
-                        {isOwner ? "Dashboard" : "List your hotel"}
+                        {isOwner ? "Dashboard" : "Register your hotel"}
 
                         <BookIcon />
 
                     </button>
                 ) : (
                     !user && < button onClick={openSignIn} className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
-                        GiriÅŸ yap
+                        Giris Yap
                     </button>
                 )}
             </div>

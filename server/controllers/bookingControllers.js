@@ -104,18 +104,67 @@ export const getUserBookings = async (req, res) => {
 export const getHotelBookings = async (req, res) => {
     try {
         // Clerk veya Auth sistemine göre owner ID kontrolü
-        const hotel = await Hotel.findOne({ owner: req.auth?.userId || req.user?._id });
-        if (!hotel) {
+        const ownerId = req.auth?.userId || req.user?._id;
+        const hotels = await Hotel.find({ owner: ownerId });
+        
+        if (!hotels || hotels.length === 0) {
             return res.json({ success: false, message: "No hotel found for this owner" });
         }
 
-        const bookings = await Booking.find({ hotel: hotel._id }).populate("room hotel user").sort({ createdAt: -1 });
+        const hotelIds = hotels.map(h => h._id);
+
+        const bookings = await Booking.find({ hotel: { $in: hotelIds } }).populate("room hotel user").sort({ createdAt: -1 });
         const totalBooking = bookings.length;
-        const totalRevenue = bookings.reduce((acc, booking) => acc + (booking.totalPrice || 0), 0);
+        
+        // Calculate revenue only for confirmed or completed bookings
+        const totalRevenue = bookings.reduce((acc, booking) => {
+            if (['confirmed', 'completed'].includes(booking.status)) {
+                return acc + (booking.totalPrice || 0);
+            }
+            return acc;
+        }, 0);
 
         res.json({ success: true, DashboardData: { bookings, totalBooking, totalRevenue } });
     } catch (error) {
         console.error("Dashboard Error:", error);
         res.json({ success: false, message: "Failed to fetch bookings" });
+    }
+}
+
+export const updateBookingStatus = async (req, res) => {
+    try {
+        const { bookingId, status } = req.body;
+        
+        // Validate status
+        if (!['confirmed', 'cancelled'].includes(status)) {
+            return res.json({ success: false, message: "Invalid status" });
+        }
+
+        // Find booking
+        const booking = await Booking.findById(bookingId).populate('hotel');
+        if (!booking) {
+            return res.json({ success: false, message: "Booking not found" });
+        }
+
+        // Check if the requesting user is the owner of the hotel
+        const hotel = await Hotel.findById(booking.hotel._id);
+        if (hotel.owner.toString() !== req.user._id.toString()) {
+             return res.json({ success: false, message: "Not authorized" });
+        }
+
+        booking.status = status;
+        if (status === 'confirmed') {
+            booking.paymentStatus = 'paid'; // Assuming confirmation means payment is settled or guaranteed
+        } else if (status === 'cancelled') {
+            booking.paymentStatus = 'failed'; // Or refunded, depending on logic
+        }
+        
+        await booking.save();
+        
+        res.json({ success: true, message: `Booking ${status} successfully` });
+
+    } catch (error) {
+        console.error("Update Status Error:", error);
+        res.json({ success: false, message: error.message });
     }
 }

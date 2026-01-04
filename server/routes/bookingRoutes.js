@@ -5,7 +5,8 @@ import {
     checkAvailabilityAPI,
     createBooking,
     getUserBookings,
-    getHotelBookings
+    getHotelBookings,
+    updateBookingStatus
 } from "../controllers/bookingControllers.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -15,5 +16,6 @@ bookingRouter.post('/check-availability', protect, checkAvailabilityAPI);
 bookingRouter.post('/book', protect, createBooking);
 bookingRouter.get('/user', protect, getUserBookings);
 bookingRouter.get('/hotel', protect, getHotelBookings);
+bookingRouter.post('/update-status', protect, updateBookingStatus);
 
 export default bookingRouter;

@@ -11,7 +11,7 @@ const AppContext = createContext();
 export const AppProvider = ({ children }) => {
     const currency = import.meta.env.VITE_CURRENCY || '$';
     const navigate = useNavigate();
-    const { user } = useUser();
+    const { user, isLoaded } = useUser();
     const { getToken } = useAuth()
 
     const [isOwner, setIsOwner] = useState(false);
@@ -72,20 +72,24 @@ export const AppProvider = ({ children }) => {
     }
 
     useEffect(() => {
-        if (user) {
-            fetchUser();
+        if (isLoaded) {
+            if (user) {
+                fetchUser();
+            } else {
+                // User is not logged in, so data is "loaded" (as empty)
+                setUserDataLoaded(true);
+            }
         }
-    }, [user])
+    }, [user, isLoaded])
 
     useEffect(() => {
         fetchRooms();
     }, [])
 
-
     const value = {
-        currency,isAdmin, setIsAdmin, userDataLoaded, 
+        currency, isAdmin, setIsAdmin, userDataLoaded, 
         navigate,
-        user, getToken, isOwner, setIsOwner, axios, showHotelReg, setShowHotelReg,
+        user, isLoaded, getToken, isOwner, setIsOwner, axios, showHotelReg, setShowHotelReg,
         searchedCities, setSearchedCities, rooms, setRooms, loading
     }
 

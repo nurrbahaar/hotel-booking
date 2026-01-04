@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { roomsDummyData, assets, roomCommonData , facilityIcons} from '../assets/assets';
 import StarRating from '../components/StarRating';
 import { useAppContext } from '../conext/AppContext';
@@ -8,34 +8,37 @@ import RoomDetailsSkeleton from '../components/RoomDetailsSkeleton';
 
 const RoomDetails = () => {
     const { id } = useParams()
+    const [searchParams] = useSearchParams();
     const { rooms, getToken, axios, navigate, loading } = useAppContext();
     const [room, setRoom] = useState(null);
     const [mainImage, setMainImage] = useState(null);
-    const [checkInDate, setCheckInDate] = useState('');
-    const [checkOutDate, setCheckOutDate] = useState('');
-    const [guests, setGuests] = useState(1);
+    const [checkInDate, setCheckInDate] = useState(searchParams.get('checkIn') || '');
+    const [checkOutDate, setCheckOutDate] = useState(searchParams.get('checkOut') || '');
+    const [guests, setGuests] = useState(searchParams.get('guests') || 1);
 
     const [isAvailable, setIsAvailable] = useState(false);
 
     const checkAvailability = async () => {
         try {
             if (checkInDate >= checkOutDate) {
-                toast.error("Check-Out date must be after Check-In date")
+                toast.error("Cikis tarihi giris tarihinden sonra olmalidir")
                 return;
             }
+            const token = await getToken();
             const { data } = await axios.post('/api/bookings/check-availability', {
                 room: id,
                 checkInDate,
                 checkOutDate,
-            })
+            }, { headers: { Authorization: `Bearer ${token}` } })
+            
             if (data?.success) {
                 if (data.isAvailable) {
                     setIsAvailable(true)
-                    toast.success("Room is available for the selected dates");
+                    toast.success("Oda secilen tarihler icin musait");
                 }
                 else {
                     setIsAvailable(false);
-                    toast.error("Room is not available for the selected dates");
+                    toast.error("Oda secilen tarihler icin musait degil");
                 }
             }
             else {
@@ -43,7 +46,7 @@ const RoomDetails = () => {
             }
         }
         catch (error) {
-            toast.error("An error occurred while checking availability");
+            toast.error("Musaitlik kontrolu sirasinda bir hata olustu");
         }
     }
 
@@ -73,7 +76,7 @@ const RoomDetails = () => {
             }
         }
         catch (error) {
-            toast.error("An error occurred while booking the room");
+            toast.error("Rezervasyon sirasinda bir hata olustu");
         }
     }
     useEffect(() => {
@@ -161,25 +164,25 @@ const RoomDetails = () => {
             <form onSubmit={onSubmitHandler} className='flex flex-col md:flex-row items-start md:items-center justify-between bg-white shadow-[0px_0px_20px_rgba(0,0,0,0.15)] p-6 rounded-xl mx-auto mt-16 max-w-6xl' >
                 <div className='flex flex-col md:flex-row gap-4 w-full' >
                     <div className='flex flex-col w-full' >
-                        <label htmlFor='checkInDate' className='font-medium'>Check-In</label>
-                        <input  onChange={(e) => setCheckInDate(e.target.value)} min={new Date().toString().split('T')[0]} type='date' id="checkInDate" placeholder="check-In" className='w-full rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none' required />
+                        <label htmlFor='checkInDate' className='font-medium'>Giris Tarihi</label>
+                        <input value={checkInDate} onChange={(e) => setCheckInDate(e.target.value)} min={new Date().toISOString().split('T')[0]} type='date' id="checkInDate" placeholder="check-In" className='w-full rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none' required />
                     </div>
 
                     <div className='flex flex-col w-full' >
-                        <label htmlFor='checkOutDate' className='font-medium'>Check-Out</label>
-                        <input onChange={(e)=> setCheckOutDate(e.target.value)} min={checkInDate} disabled={!checkInDate} type='date' id="checkOutDate" placeholder="check-Out" className='w-full rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none' required />
+                        <label htmlFor='checkOutDate' className='font-medium'>Cikis Tarihi</label>
+                        <input value={checkOutDate} onChange={(e)=> setCheckOutDate(e.target.value)} min={checkInDate} disabled={!checkInDate} type='date' id="checkOutDate" placeholder="check-Out" className='w-full rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none' required />
                     </div>
                     <div className='w-px h-15 bg-gray-300/70 max-md:hidden' >
 
                     </div>
                     <div className='flex flex-col w-full' >
-                        <label htmlFor='guests' className='font-medium'>Guests</label>
+                        <label htmlFor='guests' className='font-medium'>Misafir Sayisi</label>
                         <input onChange={(e) => setGuests(e.target.value)} value={guests} type='number' id="guests" placeholder="0" className='max-w-20 rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none' required />
                     </div>
 
                 </div>
                 <button type='submit' className='bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-6 rounded-lg shadow-md transition-colors duration-300' >
-{isAvailable ? 'Book Now' : 'Check Availability'}
+{isAvailable ? 'Rezervasyon Yap' : 'Musaitlik Kontrolu'}
                 </button>
 
             </form>
@@ -196,8 +199,13 @@ const RoomDetails = () => {
             </div>
 
             <div className='max-w-3xl border-y border-gray-300 my-15 py-10 text-gray-500' >
+                <p className='mb-4'>
+                    {room.description}
+                </p>
                 <p>
-                    lalalalalalal bilgiler felan burda
+                    Konuklarimiz icin ozenle tasarlanmis bu odada konfor ve sikligi bir arada bulacaksiniz. 
+                    Modern imkanlar, ferah yasam alanlari ve essiz manzarasi ile unutulmaz bir konaklama deneyimi sizi bekliyor. 
+                    Otelimiz, sehrin en gozde noktalarina yakin konumuyla hem is hem de tatil amacli seyahatleriniz icin mukemmel bir tercihtir.
                 </p>
             </div>
             {/* hosted by */}
@@ -213,7 +221,18 @@ const RoomDetails = () => {
 
                 </div>
             </div>
-            <button className='px-6 py-2.5 mt-4 rounded text-white bg-primary hover:bg-primary-dull transition-all cursor-pointer'>Contact now</button>
+            <button 
+                onClick={() => {
+                    if (room.hotel?.phone) {
+                        window.location.href = `tel:${room.hotel.phone}`;
+                    } else {
+                        toast.error("Contact information not available");
+                    }
+                }}
+                className='px-6 py-2.5 mt-4 rounded text-white bg-primary hover:bg-primary-dull transition-all cursor-pointer'
+            >
+                Contact now
+            </button>
         </div >
     ) : null;// Ternary operatörü kapatıldı
 }

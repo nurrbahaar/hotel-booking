@@ -39,19 +39,30 @@ const AllRooms = () => {
     console.log("AllRooms - rooms:", rooms);
 
     const [openFilters, setOpenFilters] = useState(false);
-    // --- FÄ°LTRE STATE'LERÄ° ---
+    // --- FÝLTRE STATE'LERÝ ---
     const [selectedTypes, setSelectedTypes] = useState([]);
     const [selectedPriceRanges, setSelectedPriceRanges] = useState([]);
     const [selectedSort, setSelectedSort] = useState('');
+    
+    // --- PAGINATION STATE ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
-    const roomTypes = ['Single Bed', 'Double Bed', 'Luxury Room', 'Family'];
-    const priceRanges = ['$50 - $100', '$101 - $200', '$201 - $300', '$301 - $400', '$401+'];
+    const roomTypes = ['Standart Oda', 'Premium Suit', 'Deluxe Oda', 'Aile Odasi'];
+    const priceRanges = ['0 - 1000 TL', '1001 - 3000 TL', '3001 - 5000 TL', '5001 - 10000 TL', '10001+ TL'];
     const sortOptions = [
-        'Price: Low to High',
-        'Price: High to Low',
-        'Rating: High to Low',
-        'Rating: Low to High',
+        'Fiyat: Artan',
+        'Fiyat: Azalan',
+        'Puan: Yuksekten Dusuge',
+        'Puan: Dusukten Yuksege',
     ];
+
+    const roomTypeMapping = {
+        'Standart Oda': 'Standard Room',
+        'Premium Suit': 'Premium Suite',
+        'Deluxe Oda': 'Deluxe Room',
+        'Aile Odasi': 'Family Room'
+    };
 
     // --- FILTERING LOGIC ---
     const filteredRooms = useMemo(() => {
@@ -64,15 +75,26 @@ const AllRooms = () => {
         const destination = searchParams.get('destination');
         if (destination) {
             tempRooms = tempRooms.filter(room =>
-                room.hotel?.city?.toLowerCase().includes(destination.toLowerCase()) ||
+                room.hotel?.address?.city?.toLowerCase().includes(destination.toLowerCase()) ||
                 room.hotel?.name?.toLowerCase().includes(destination.toLowerCase())
+            );
+        }
+
+        // 1.1 Filter by Guests (from URL)
+        const guests = searchParams.get('guests');
+        if (guests) {
+            tempRooms = tempRooms.filter(room => 
+                (room.capacity?.adults || 0) + (room.capacity?.children || 0) >= parseInt(guests)
             );
         }
 
         // 2. Filter by Room Type
         if (selectedTypes.length > 0) {
             tempRooms = tempRooms.filter(room =>
-                selectedTypes.some(type => room.roomType.toLowerCase() === type.toLowerCase())
+                selectedTypes.some(type => {
+                    const englishType = roomTypeMapping[type] || type;
+                    return room.roomType?.toLowerCase().includes(englishType.toLowerCase());
+                })
             );
         }
 
@@ -80,10 +102,10 @@ const AllRooms = () => {
         if (selectedPriceRanges.length > 0) {
             tempRooms = tempRooms.filter(room => {
                 return selectedPriceRanges.some(range => {
-                    if (range === '$401+') {
-                        return room.pricePerNight >= 401;
+                    if (range === '10001+ TL') {
+                        return room.pricePerNight >= 10001;
                     }
-                    const parts = range.replace(/\$/g, '').split(' - ');
+                    const parts = range.replace(' TL', '').split(' - ');
                     const min = parseInt(parts[0]);
                     const max = parseInt(parts[1]);
                     return room.pricePerNight >= min && room.pricePerNight <= max;
@@ -92,14 +114,14 @@ const AllRooms = () => {
         }
 
         // 4. Sort
-        if (selectedSort === 'Price: Low to High') {
-            tempRooms.sort((a, b) => a.pricePerNight - b.pricePerNight);
-        } else if (selectedSort === 'Price: High to Low') {
-            tempRooms.sort((a, b) => b.pricePerNight - a.pricePerNight);
-        } else if (selectedSort === 'Rating: High to Low') {
-            tempRooms.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-        } else if (selectedSort === 'Rating: Low to High') {
-            tempRooms.sort((a, b) => (a.rating || 0) - (b.rating || 0));
+        if (selectedSort === 'Fiyat: Artan') {
+            tempRooms.sort((a, b) => (Number(a.pricePerNight) || 0) - (Number(b.pricePerNight) || 0));
+        } else if (selectedSort === 'Fiyat: Azalan') {
+            tempRooms.sort((a, b) => (Number(b.pricePerNight) || 0) - (Number(a.pricePerNight) || 0));
+        } else if (selectedSort === 'Puan: Yuksekten Dusuge') {
+            tempRooms.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
+        } else if (selectedSort === 'Puan: Dusukten Yuksege') {
+            tempRooms.sort((a, b) => (Number(a.rating) || 0) - (Number(b.rating) || 0));
         }
 
         return tempRooms;
@@ -110,6 +132,18 @@ const AllRooms = () => {
         setSelectedPriceRanges([]);
         setSelectedSort('');
         setSearchParams({});
+        setCurrentPage(1);
+    };
+
+    // --- PAGINATION LOGIC ---
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentRooms = filteredRooms.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredRooms.length / itemsPerPage);
+
+    const paginate = (pageNumber) => {
+        setCurrentPage(pageNumber);
+        window.scrollTo(0, 0);
     };
 
     // --- HANDLERS ---
@@ -146,16 +180,17 @@ const AllRooms = () => {
                     </p>
                 </div>
 
-                {/* FÄ°LTRELENMÄ°Åž LÄ°STE DÃ–NGÃœSÃœ */}
+                {/* FÝLTRELENMÝÞ LÝSTE DÖNGÜSÜ */}
                 {loading ? (
                     [1, 2, 3].map((i) => <RoomListSkeleton key={i} />)
-                ) : filteredRooms.length > 0 ? (
-                    filteredRooms.map((room, index) => (
+                ) : currentRooms.length > 0 ? (
+                    <>
+                        {currentRooms.map((room, index) => (
                         <div key={room._id} 
                              style={{ animationDelay: `${index * 0.1}s` }}
                              className='my-8 flex flex-col md:flex-row items-center gap-6 border-b border-gray-100 pb-8 last:border-0 animate-fade-in-up opacity-0'>
                             <img
-                                onClick={() => { navigate(`/rooms/${room._id}`); window.scrollTo(0, 0); }}
+                                onClick={() => { navigate(`/rooms/${room._id}?${searchParams.toString()}`); window.scrollTo(0, 0); }}
                                 src={room.images[0]}
                                 alt='hotel-img'
                                 title='view room details'
@@ -163,8 +198,8 @@ const AllRooms = () => {
                             />
 
                             <div className='w-full md:w-1/2 flex flex-col gap-2'>
-                                <p className='text-gray-500 text-sm'>{room.hotel?.city || 'Unknown City'}</p>
-                                <p onClick={() => { navigate(`/rooms/${room._id}`); window.scrollTo(0, 0); }} className='text-gray-800 text-2xl md:text-3xl font-playfair cursor-pointer hover:text-indigo-600 transition-colors'>
+                                <p className='text-gray-500 text-sm'>{room.hotel?.address?.city || 'Unknown City'}</p>
+                                <p onClick={() => { navigate(`/rooms/${room._id}?${searchParams.toString()}`); window.scrollTo(0, 0); }} className='text-gray-800 text-2xl md:text-3xl font-playfair cursor-pointer hover:text-indigo-600 transition-colors'>
                                     {room.hotel?.name || 'Unknown Hotel'}
                                 </p>
 
@@ -192,13 +227,43 @@ const AllRooms = () => {
                                 </div>
                                 <div className='flex items-center justify-between mt-2'>
                                     <p className='text-xl font-medium text-gray-800'> {room.pricePerNight} TL <span className='text-sm text-gray-500 font-normal'>/night</span> </p>
-                                    <button onClick={() => navigate(`/rooms/${room._id}`)} className='bg-black text-white px-4 py-2 rounded-full text-sm hover:bg-gray-800 transition-colors'>
+                                    <button onClick={() => navigate(`/rooms/${room._id}?${searchParams.toString()}`)} className='bg-black text-white px-4 py-2 rounded-full text-sm hover:bg-gray-800 transition-colors'>
                                         View Details
                                     </button>
                                 </div>
                             </div>
                         </div>
-                    ))
+                    ))}
+                    
+                    {/* Pagination Controls */}
+                    <div className='flex justify-center items-center gap-2 mt-8 mb-12'>
+                        <button 
+                            onClick={() => paginate(currentPage - 1)} 
+                            disabled={currentPage === 1}
+                            className={`px-4 py-2 rounded border ${currentPage === 1 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                        >
+                            &lt; Önceki
+                        </button>
+                        
+                        {[...Array(totalPages)].map((_, i) => (
+                            <button
+                                key={i}
+                                onClick={() => paginate(i + 1)}
+                                className={`w-10 h-10 rounded border ${currentPage === i + 1 ? 'bg-black text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                            >
+                                {i + 1}
+                            </button>
+                        ))}
+
+                        <button 
+                            onClick={() => paginate(currentPage + 1)} 
+                            disabled={currentPage === totalPages}
+                            className={`px-4 py-2 rounded border ${currentPage === totalPages ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                        >
+                            Sonraki &gt;
+                        </button>
+                    </div>
+                    </>
                 ) : (
                     <div className='py-20 text-center text-gray-500'>
                         <p>No rooms found matching your filters.</p>
@@ -212,12 +277,12 @@ const AllRooms = () => {
                 <div className='bg-white w-full lg:w-80 border border-gray-200 text-gray-600 max-lg:mb-8 lg:mt-16 p-5 rounded-xl shadow-sm sticky top-24'>
 
                     <div className={`flex items-center justify-between pb-3 ${openFilters ? "border-b border-gray-200" : ""}`}>
-                        <p className='font-bold text-gray-800 tracking-wide'>FILTERS</p>
+                        <p className='font-bold text-gray-800 tracking-wide'>FILTRELER</p>
                         <div className='text-xs cursor-pointer font-medium'>
                             <span onClick={() => setOpenFilters(prev => !prev)} className='lg:hidden text-indigo-600'>
-                                {openFilters ? 'HIDE' : 'SHOW'}
+                                {openFilters ? 'GIZLE' : 'GOSTER'}
                             </span>
-                            <span onClick={clearFilters} className='hidden lg:block text-red-500 hover:text-red-700 transition-colors'>CLEAR ALL</span>
+                            <span onClick={clearFilters} className='hidden lg:block text-red-500 hover:text-red-700 transition-colors'>TEMIZLE</span>
                         </div>
                     </div>
 
@@ -225,7 +290,7 @@ const AllRooms = () => {
 
                         {/* Room Type Filter */}
                         <div className='mb-6'>
-                            <p className='font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wider'>Room Type</p>
+                            <p className='font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wider'>Oda Tipi</p>
                             {roomTypes.map((type, index) => (
                                 <CheckBox
                                     key={index}
@@ -238,7 +303,7 @@ const AllRooms = () => {
 
                         {/* Price Range Filter */}
                         <div className='mb-6'>
-                            <p className='font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wider'>Price Range</p>
+                            <p className='font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wider'>Fiyat Aralýðý</p>
                             {priceRanges.map((range, index) => (
                                 <CheckBox
                                     key={index}
@@ -251,7 +316,7 @@ const AllRooms = () => {
 
                         {/* Sort Option */}
                         <div>
-                            <p className='font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wider'>Sort By</p>
+                            <p className='font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wider'>Siralama</p>
                             {sortOptions.map((option, index) => (
                                 <RadioButton
                                     key={index}
