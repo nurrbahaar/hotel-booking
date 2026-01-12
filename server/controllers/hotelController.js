@@ -1,3 +1,16 @@
+// Otel Sil (Admin veya Otel Sahibi)
+export const deleteHotel = async (req, res) => {
+    try {
+        const hotelId = req.params.id;
+        const hotel = await Hotel.findByIdAndDelete(hotelId);
+        if (!hotel) {
+            return res.json({ success: false, message: 'Otel bulunamadý' });
+        }
+        res.json({ success: true, message: 'Otel baþarýyla silindi' });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+};
 import Hotel from "../models/Hotel.js";
 import User from "../models/User.js";
 import Role from "../models/Role.js";
@@ -77,7 +90,7 @@ export const getHotels = async (req, res) => {
 // Get pending hotels (Admin only)
 export const getPendingHotels = async (req, res) => {
     try {
-        const hotels = await Hotel.find({ isApproved: false }).populate('owner', 'name email');
+        const hotels = await Hotel.find({ isApproved: false, status: { $ne: 'rejected' } }).populate('owner', 'name email');
         res.json({ success: true, hotels });
     } catch (error) {
         res.json({ success: false, message: error.message });
@@ -88,13 +101,47 @@ export const getPendingHotels = async (req, res) => {
 export const approveHotel = async (req, res) => {
     try {
         const { hotelId } = req.body;
-        const hotel = await Hotel.findByIdAndUpdate(hotelId, { isApproved: true }, { new: true });
+        const hotel = await Hotel.findByIdAndUpdate(hotelId, { isApproved: true, status: 'active' }, { new: true });
         
         if (!hotel) {
             return res.json({ success: false, message: "Hotel not found" });
         }
 
+        // Assign hotelOwner role to the user if not already assigned
+        const hotelOwnerRole = await Role.findOne({ name: "hotelOwner" });
+        if (hotelOwnerRole && hotel.owner) {
+            await User.findByIdAndUpdate(hotel.owner, {
+                $addToSet: { roles: hotelOwnerRole._id }
+            });
+        }
+
         res.json({ success: true, message: "Hotel approved successfully", hotel });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// Reject hotel (Admin only)
+export const rejectHotel = async (req, res) => {
+    try {
+        const { hotelId } = req.body;
+        const hotel = await Hotel.findByIdAndUpdate(hotelId, { status: 'rejected' }, { new: true });
+        
+        if (!hotel) {
+            return res.json({ success: false, message: "Hotel not found" });
+        }
+
+        res.json({ success: true, message: "Hotel rejected successfully", hotel });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// Get all hotels (Admin only)
+export const getAllHotelsAdmin = async (req, res) => {
+    try {
+        const hotels = await Hotel.find({}).populate('owner', 'name email');
+        res.json({ success: true, hotels });
     } catch (error) {
         res.json({ success: false, message: error.message });
     }

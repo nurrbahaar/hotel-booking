@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 const hotelSchema = new mongoose.Schema({
+    externalId: { type: String, unique: true, sparse: true }, // RapidAPI'den gelen ID
     name: { type: String, required: true },
     slug: { type: String, unique: true }, // ERD: slug
     description: { type: String }, // ERD: implied
@@ -26,9 +27,10 @@ const hotelSchema = new mongoose.Schema({
     city: { type: String }, 
     
     // Status & Rating (ERD: status, star_rating)
-    status: { type: String, enum: ['active', 'inactive', 'pending'], default: 'active' },
+    status: { type: String, enum: ['active', 'inactive', 'pending', 'rejected'], default: 'active' },
     isApproved: { type: Boolean, default: false },
-    starRating: { type: Number, min: 1, max: 5, default: 0 },
+    starRating: { type: Number, min: 0, max: 5, default: 0 },
+    numReviews: { type: Number, default: 0 },
     
     // Policies (ERD: checkin_time, checkout_time)
     policies: {

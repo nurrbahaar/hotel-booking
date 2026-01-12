@@ -32,6 +32,12 @@ export const createBooking = async (req, res) => {
         const { room, checkInDate, checkOutDate, guests } = req.body;
         const user = req.user._id;
 
+        // Oda ve otel bilgisini çek
+        const roomData = await Room.findById(room).populate('hotel');
+        if (!roomData) {
+            return res.json({ success: false, message: "Room not found" });
+        }
+
         const isAvailable = await checkAvailability({ checkInDate, checkOutDate, room });
         if (!isAvailable) {
             return res.json({ success: false, message: "Room is not available for the selected dates" });
@@ -42,15 +48,8 @@ export const createBooking = async (req, res) => {
         const timeDiff = checkOut.getTime() - checkIn.getTime();
         const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-        // Veritabanýndan odayý ve oteli çekiyoruz
-        const roomData = await Room.findById(room).populate('hotel');
-        if (!roomData) {
-            return res.json({ success: false, message: "Room not found" });
-        }
-
-        // Fiyat hesaplama (pricePerNight kullandýk)
-        const price = roomData.pricePerNight;
-        const totalPrice = price * nights;
+        // Fiyat hesaplama
+        const totalPrice = roomData.pricePerNight * nights;
 
         const booking = await Booking.create({
             user,
@@ -64,25 +63,29 @@ export const createBooking = async (req, res) => {
             paymentStatus: 'pending'
         });
 
-        // E-posta gönderimi
-        const mailOptions = {
-            from: process.env.SENDER_EMAIL,
-            to: req.user.email,
-            subject: "Hotel Booking Details",
-            html: `
-                <h2>Your booking details</h2>
-                <p>Dear ${req.user.username},</p>
-                <ul>
-                    <li><strong>Booking ID:</strong> ${booking._id}</li>
-                    <li><strong>Hotel Name:</strong> ${roomData.hotel.name}</li>
-                    <li><strong>City:</strong> ${roomData.hotel.city || 'Belirtilmedi'}</li>
-                    <li><strong>Check-in Date:</strong> ${checkIn.toDateString()}</li>
-                    <li><strong>Total Amount:</strong> ${process.env.CURRENCY || '$'} ${booking.totalPrice}</li>
-                </ul> 
-            `
-        };
+        // E-posta gönderimi (Hata olursa iþlemi durdurmasýn)
+        try {
+            const mailOptions = {
+                from: process.env.SENDER_EMAIL,
+                to: req.user.email,
+                subject: "Hotel Booking Details",
+                html: `
+                    <h2>Your booking details</h2>
+                    <p>Dear ${req.user.username},</p>
+                    <ul>
+                        <li><strong>Booking ID:</strong> ${booking._id}</li>
+                        <li><strong>Hotel Name:</strong> ${roomData.hotel.name}</li>
+                        <li><strong>City:</strong> ${roomData.hotel.city || 'Belirtilmedi'}</li>
+                        <li><strong>Check-in Date:</strong> ${checkIn.toDateString()}</li>
+                        <li><strong>Total Amount:</strong> ${process.env.CURRENCY || '$'} ${booking.totalPrice}</li>
+                    </ul> 
+                `
+            };
+            await transporter.sendMail(mailOptions);
+        } catch (emailError) {
+            console.log("Email gönderilemedi (Önemsiz):", emailError.message);
+        }
 
-        await transporter.sendMail(mailOptions);
         res.json({ success: true, message: "Booking created successfully", booking });
 
     } catch (error) {
@@ -111,7 +114,7 @@ export const getHotelBookings = async (req, res) => {
             return res.json({ success: false, message: "No hotel found for this owner" });
         }
 
-        const hotelIds = hotels.map(h => h._id);
+        const hotelIds = hotels.map(h => h._id.toString());
 
         const bookings = await Booking.find({ hotel: { $in: hotelIds } }).populate("room hotel user").sort({ createdAt: -1 });
         const totalBooking = bookings.length;
@@ -124,7 +127,46 @@ export const getHotelBookings = async (req, res) => {
             return acc;
         }, 0);
 
-        res.json({ success: true, DashboardData: { bookings, totalBooking, totalRevenue } });
+        // Monthly Earnings for Owner (Last 6 months)
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+        // Convert ObjectIds to Strings for aggregation match if stored as strings
+        const hotelIdStrings = hotelIds.map(id => id.toString());
+
+        const monthlyEarnings = await Booking.aggregate([
+            {
+                $match: {
+                    hotel: { $in: hotelIdStrings },
+                    createdAt: { $gte: sixMonthsAgo },
+                    status: { $in: ['confirmed', 'completed'] }
+                }
+            },
+            {
+                $group: {
+                    _id: { 
+                        month: { $month: "$createdAt" },
+                        year: { $year: "$createdAt" }
+                    },
+                    total: { $sum: "$totalPrice" },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { "_id.year": 1, "_id.month": 1 } }
+        ]);
+
+        const chartData = monthlyEarnings.map(item => {
+            const date = new Date();
+            date.setMonth(item._id.month - 1);
+            date.setFullYear(item._id.year);
+            return {
+                name: date.toLocaleString('default', { month: 'short' }),
+                earnings: item.total,
+                bookings: item.count
+            };
+        });
+
+        res.json({ success: true, DashboardData: { bookings, totalBooking, totalRevenue, chartData } });
     } catch (error) {
         console.error("Dashboard Error:", error);
         res.json({ success: false, message: "Failed to fetch bookings" });
@@ -165,6 +207,27 @@ export const updateBookingStatus = async (req, res) => {
 
     } catch (error) {
         console.error("Update Status Error:", error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+export const getBookedRoomIds = async (req, res) => {
+    try {
+        const { checkIn, checkOut } = req.query;
+        
+        if (!checkIn || !checkOut) {
+             return res.json({ success: true, bookedRoomIds: [] });
+        }
+
+        const bookings = await Booking.find({
+            status: { $in: ['confirmed', 'pending'] },
+            checkInDate: { $lt: new Date(checkOut) },
+            checkOutDate: { $gt: new Date(checkIn) }
+        }).select('room');
+
+        const bookedRoomIds = bookings.map(b => b.room.toString());
+        res.json({ success: true, bookedRoomIds });
+    } catch (error) {
         res.json({ success: false, message: error.message });
     }
 }

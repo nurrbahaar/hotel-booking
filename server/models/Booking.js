@@ -53,5 +53,10 @@ const bookingSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
+// Performans için indexler
+bookingSchema.index({ room: 1 });
+bookingSchema.index({ checkInDate: 1 });
+bookingSchema.index({ checkOutDate: 1 });
+
 const Booking = mongoose.model("Booking", bookingSchema);
 export default Booking;

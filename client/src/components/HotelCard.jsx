@@ -32,7 +32,7 @@ const HotelCard = ({ room, index }) => {
                 </div>
                 <div className='flex items-center justify-between mt-4'>
                     <p className='text-gray-800 font-medium'>
-                        <span>{room.pricePerNight || room.basePrice} TL </span> <span className='text-gray-500 text-sm font-normal'>/ night</span>
+                        <span>{room.pricePerNight || room.basePrice} TL </span> <span className='text-gray-500 text-sm font-normal'>/ gece</span>
                     </p>
 
                     <button className='px-4 py-2 text-sm font-medium border border-gray-300 rounded hover:bg-gray-50 transition-all cursor-pointer'>Book Now</button>

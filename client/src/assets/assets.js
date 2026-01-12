@@ -72,6 +72,7 @@ export const assets = {
     uploadArea,
     totalBookingIcon,
     totalRevenueIcon,
+    placeholderImage: roomImg1,
 }
 
 export const cities = [
@@ -87,32 +88,86 @@ export const exclusiveOffers = [
 
 // Testimonials Dummy Data
 export const testimonials = [
-    { id: 1, name: "Emma Rodriguez", address: "Barcelona, Spain", image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=200", rating: 5, review: "I've used many booking platforms before, but none compare to the personalized experience and attention to detail that QuickStay provides." },
-    { id: 2, name: "Liam Johnson", address: "New York, USA", image: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200", rating: 4, review: "QuickStay exceeded my expectations. The booking process was seamless, and the hotels were absolutely top-notch. Highly recommended!" },
-    { id: 3, name: "Sophia Lee", address: "Seoul, South Korea", image: "https://images.unsplash.com/photo-1701615004837-40d8573b6652?q=80&w=200", rating: 5, review: "Amazing service! I always find the best luxury accommodations through QuickStay. Their recommendations never disappoint!" }
+    { id: 1, name: "Ay\u015Fe Y\u0131lmaz", address: "\u0130stanbul, T\u00FCrkiye", image: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=200", rating: 5, review: "Daha \u00F6nce bir\u00E7ok rezervasyon sitesi kulland\u0131m ama hi\u00E7biri Roomy'nin sundu\u011Fu ki\u015Fiselle\u015Ftirilmi\u015F deneyim ve detaylara g\u00F6sterilen \u00F6zenle k\u0131yaslanamaz." },
+    { id: 2, name: "Mehmet Demir", address: "Ankara, T\u00FCrkiye", image: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200", rating: 4, review: "Roomy beklentilerimi a\u015Ft\u0131. Rezervasyon s\u00FCreci sorunsuzdu ve oteller kesinlikle birinci s\u0131n\u0131ft\u0131. \u015Eiddetle tavsiye ederim!" },
+    { id: 3, name: "Zeynep Kaya", address: "\u0130zmir, T\u00FCrkiye", image: "https://images.unsplash.com/photo-1701615004837-40d8573b6652?q=80&w=200", rating: 5, review: "Harika hizmet! En iyi l\u00FCks konaklama yerlerini her zaman Roomy arac\u0131l\u0131\u011F\u0131yla buluyorum. \u00D6nerileri asla hayal k\u0131r\u0131kl\u0131\u011F\u0131na u\u011Fratm\u0131yor!" },
+    { id: 4, name: "Can \u00D6zt\u00FCrk", address: "Antalya, T\u00FCrkiye", image: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=200", rating: 5, review: "M\u00FC\u015Fteri deste\u011Fi ola\u011Fan\u00FCst\u00FC. Son dakikada rezervasyonumu de\u011Fi\u015Ftirmeme hi\u00E7 zorluk \u00E7\u0131karmadan yard\u0131mc\u0131 oldular. Ger\u00E7ekten 5 y\u0131ld\u0131zl\u0131 bir deneyim." },
+    { id: 5, name: "Elif \u015Eahin", address: "Bursa, T\u00FCrkiye", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200", rating: 4, review: "Bu platform sayesinde Kapadokya'da gizli bir cennet buldum. Foto\u011Fraflar do\u011Fruydu ve fiyat rakipsizdi. Kesinlikle tekrar kullanaca\u011F\u0131m." },
+    { id: 6, name: "Burak \u00C7elik", address: "Mu\u011Fla, T\u00FCrkiye", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=200", rating: 5, review: "Kullan\u0131c\u0131 aray\u00FCz\u00FC \u00E7ok temiz ve kullan\u0131m\u0131 kolay. T\u00FCm balay\u0131 seyahatimi buradan ayarlad\u0131m ve her \u015Fey m\u00FCkemmel bir \u015Fekilde ilerledi." }
 ];
 
 // Facility Icon
 export const facilityIcons = {
+    // English
     "Free WiFi": assets.freeWifiIcon,
     "Free Breakfast": assets.freeBreakfastIcon,
     "Room Service": assets.roomServiceIcon,
     "Mountain View": assets.mountainIcon,
     "Pool Access": assets.poolIcon,
-    // Mappings for seed data
     "WiFi": assets.freeWifiIcon,
-    "TV": assets.homeIcon, // Placeholder
-    "Air Conditioning": assets.mountainIcon, // Placeholder for cool air
+    "TV": assets.homeIcon,
+    "Air Conditioning": assets.mountainIcon,
     "Mini Bar": assets.roomServiceIcon,
-    "View": assets.locationFilledIcon
+    "View": assets.locationFilledIcon,
+    
+    // Türkçe Karakterler Doðrudan
+    "Ücretsiz Wi-Fi": assets.freeWifiIcon,
+    "ÜCRETSÝZ WI-FI": assets.freeWifiIcon,
+    "ÜCRETSÝZ WÝ-FÝ": assets.freeWifiIcon,
+    "Ucretsiz Wi-Fi": assets.freeWifiIcon,
+
+    "Yüzme Havuzu": assets.poolIcon,
+    "YÜZME HAVUZU": assets.poolIcon,
+
+    "Kahvalt\u0131 Dahil": assets.freeBreakfastIcon,
+    "KAHVALTI DAH\u0130L": assets.freeBreakfastIcon,
+    "KAHVALTI DAHIL": assets.freeBreakfastIcon,
+
+    "Havaalan\u0131 Servisi": assets.locationFilledIcon, 
+    "HAVAALANI SERV\u0130S\u0130": assets.locationFilledIcon,
+    "HAVAALANI SERVISI": assets.locationFilledIcon,
+
+    "Spa": assets.heartIcon,
+    "SPA": assets.heartIcon,
+
+    "Spor Salonu": assets.homeIcon,
+    "SPOR SALONU": assets.homeIcon,
+
+    "Restoran": assets.roomServiceIcon,
+    "RESTORAN": assets.roomServiceIcon,
+
+    "Bar": assets.roomServiceIcon,
+    "BAR": assets.roomServiceIcon,
+
+    "Otopark": assets.locationFilledIcon,
+    "OTOPARK": assets.locationFilledIcon,
+
+    "Oda Servisi": assets.roomServiceIcon,
+    "ODA SERVÝSÝ": assets.roomServiceIcon,
+    "ODA SERVISI": assets.roomServiceIcon,
+
+    "Klima": assets.mountainIcon,
+    "KLÝMA": assets.mountainIcon,
+    "KLIMA": assets.mountainIcon,
+
+    "Evcil Hayvan Dostu": assets.heartIcon,
+    "EVCÝL HAYVAN DOSTU": assets.heartIcon,
+
+    "7/24 Resepsiyon": assets.homeIcon,
+    "7/24 RESEPSÝYON": assets.homeIcon,
+    
+    // Fallbacks
+    "Wifi": assets.freeWifiIcon,
+    "Havuz": assets.poolIcon,
+    "Kahvaltý": assets.freeBreakfastIcon,
 };
 
 // For Room Details Page
 export const roomCommonData = [
-    { icon: assets.homeIcon, title: "Temiz ve Guvenli Konaklama", description: "Sizin icin bakimli ve hijyenik bir alan." },
-    { icon: assets.badgeIcon, title: "Gelismis Temizlik", description: "Bu ev sahibi Roomy'nin siki temizlik standartlarina uyar." },
-    { icon: assets.locationFilledIcon, title: "Mukemmel Konum", description: "Misafirlerin %90'i konuma 5 yildiz verdi." },
-    { icon: assets.heartIcon, title: "Sorunsuz Giris", description: "Misafirlerin %100'u giris islemine 5 yildiz verdi." },
+    { icon: assets.homeIcon, title: "Temiz ve G\u00FCvenli Konaklama", description: "Sizin i\u00E7in bak\u0131ml\u0131 ve hijyenik bir alan." },
+    { icon: assets.badgeIcon, title: "Geli\u015Fmi\u015F Temizlik", description: "Bu ev sahibi Roomy'nin s\u0131k\u0131 temizlik standartlar\u0131na uyar." },
+    { icon: assets.locationFilledIcon, title: "M\u00FCkemmel Konum", description: "Misafirlerin %90'\u0131 konuma 5 y\u0131ld\u0131z verdi." },
+    { icon: assets.heartIcon, title: "Sorunsuz Giri\u015F", description: "Misafirlerin %100'\u00FC giri\u015F i\u015Flemine 5 y\u0131ld\u0131z verdi." },
 ];
 
 // User Dummy Data

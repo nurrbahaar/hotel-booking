@@ -6,8 +6,9 @@
   --color-secondary: #FBBF24;
 }
 
+
 * {
-  font-family: Outfit;
+  font-family: 'Outfit', 'Roboto', 'Arial', 'Helvetica Neue', Helvetica, 'Segoe UI', 'Liberation Sans', sans-serif;
 }
 
 .font-playfair {

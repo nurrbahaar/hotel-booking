@@ -3,10 +3,10 @@ import { NavLink } from 'react-router-dom'
 import { assets } from '../../assets/assets'
 
 const sidebarLinks = [
-    { name: 'Dashboard', path: '/owner', icon: assets.dashboardIcon },
-    { name: 'Reservations', path: '/owner/reservations', icon: assets.listIcon }, // Using listIcon as placeholder
-    { name: 'Add Room', path: '/owner/add-room', icon: assets.addIcon },
-    { name: 'List Room', path: '/owner/list-room', icon: assets.listIcon },
+    { name: 'Panel', path: '/owner', icon: assets.dashboardIcon },
+    { name: 'Rezervasyonlar', path: '/owner/reservations', icon: assets.listIcon }, 
+    { name: 'Oda Ekle', path: '/owner/add-room', icon: assets.addIcon },
+    { name: 'Odalar\u0131 Listele', path: '/owner/list-room', icon: assets.listIcon },
 ]
 
 const Sidebar = () => {

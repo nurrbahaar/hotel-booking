@@ -7,7 +7,13 @@ import fs from 'fs';
 export const createRoom = async (req, res) => {
     try {
         const { roomType, pricePerNight, amenities, capacityAdults, capacityChildren, description } = req.body;
+        
+        console.log("createRoom called. req.auth:", req.auth);
+        console.log("Searching for hotel with owner:", req.auth.userId);
+        
         const hotel = await Hotel.findOne({ owner: req.auth.userId })
+        
+        console.log("Hotel found:", hotel ? hotel.name : "NULL");
 
         if (!hotel) return res.json({ success: false, message: "No hotel found for this owner" })
 

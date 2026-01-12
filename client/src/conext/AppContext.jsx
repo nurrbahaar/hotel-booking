@@ -9,10 +9,18 @@ axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-    const currency = import.meta.env.VITE_CURRENCY || '$';
+    const currency = 'TL';
     const navigate = useNavigate();
     const { user, isLoaded } = useUser();
-    const { getToken } = useAuth()
+    const { getToken: getClerkToken } = useAuth()
+
+    const getToken = async () => {
+        let token = await getClerkToken();
+        if (!token) {
+            token = localStorage.getItem('adminToken') || localStorage.getItem('ownerToken');
+        }
+        return token;
+    }
 
     const [isOwner, setIsOwner] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
@@ -43,7 +51,18 @@ export const AppProvider = ({ children }) => {
 
     const fetchUser = async (retryCount = 0) => {
         try {
-            const token = await getToken();
+            let token = await getToken();
+            
+            // If no Clerk token, check for manual tokens
+            if (!token) {
+                token = localStorage.getItem('adminToken') || localStorage.getItem('ownerToken');
+            }
+
+            if (!token) {
+                setUserDataLoaded(true);
+                return;
+            }
+
             const { data } = await axios.get('/api/users', { headers: { Authorization: `Bearer ${token}` } });
             if (data?.success) {
                 // Handle new roles array structure
@@ -71,10 +90,29 @@ export const AppProvider = ({ children }) => {
 
     }
 
+
+    const syncUserData = async () => {
+        if (!user) return;
+        try {
+            const token = await getToken();
+            if (token) {
+                 await axios.post('/api/users/sync', {
+                    username: user.fullName || user.firstName || "User",
+                    image: user.imageUrl,
+                    email: user.primaryEmailAddress?.emailAddress
+                }, { headers: { Authorization: `Bearer ${token}` } });
+            }
+        } catch (e) {
+            console.error("User sync failed:", e);
+        }
+    }
+
     useEffect(() => {
         if (isLoaded) {
-            if (user) {
+            const manualToken = localStorage.getItem('adminToken') || localStorage.getItem('ownerToken');
+            if (user || manualToken) {
                 fetchUser();
+                if (user) syncUserData();
             } else {
                 // User is not logged in, so data is "loaded" (as empty)
                 setUserDataLoaded(true);
@@ -87,7 +125,7 @@ export const AppProvider = ({ children }) => {
     }, [])
 
     const value = {
-        currency, isAdmin, setIsAdmin, userDataLoaded, 
+        currency, isAdmin, setIsAdmin, userDataLoaded, setUserDataLoaded,
         navigate,
         user, isLoaded, getToken, isOwner, setIsOwner, axios, showHotelReg, setShowHotelReg,
         searchedCities, setSearchedCities, rooms, setRooms, loading

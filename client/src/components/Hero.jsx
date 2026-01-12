@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react'
 
-import { assets } from '../assets/assets'
+import { assets, cities } from '../assets/assets'
 import { useAppContext } from '../conext/AppContext'
 import heroImage from '../assets/adanasuu.png'
 
@@ -40,14 +40,15 @@ const onSearch = async (e) => {
             className='flex flex-col items-start justify-center px-6 md:px-16 lg:px-24 xl:px-32 text-white bg-no-repeat bg-cover bg-center h-screen'
             style={{ backgroundImage: `url(${heroImage})` }}>
             
-            <h1 className='font-playfair text-2xl md:text-5xl md:text-[56px] md:leading-[56px] font-bold md:font-extrabold max-w-xl mt-20'>Roomy en iyi otel deneyimi</h1>
-            <p className='max-w-130 mt-2 text-sm md:text-base'>Bugun yolculugunuz basliyor! </p>
+            <h1 className='font-playfair text-4xl md:text-6xl lg:text-7xl font-bold leading-tight max-w-3xl mt-20 drop-shadow-lg'>Hayalinizdeki Tatili Roomy ile Ke{'\u015F'}fedin</h1>
+            <p className='max-w-2xl mt-4 text-lg md:text-xl font-light drop-shadow-md'>Konfor, l{'\u00FC'}ks ve unutulmaz an{'\u0131'}lar i{'\u00E7'}in do{'\u011F'}ru adrestesiniz. Sizin i{'\u00E7'}in se{'\u00E7'}ti{'\u011F'}imiz en {'\u00F6'}zel otellerde yerinizi hemen ay{'\u0131'}rt{'\u0131'}n.</p>
 
 
             <form onSubmit={onSearch} className='bg-white text-gray-500 rounded-lg px-6 py-4  mt-8 flex flex-col md:flex-row max-md:items-start gap-4 max-md:mx-auto'>
 
-                <div className='flex flex-col justify-center'>
-                    <input onChange={e=> setDestination(e.target.value)} value={destination} list='destinations' id="destinationInput" type="text" className=" rounded border border-gray-200 px-3 py-2 text-sm outline-none" />
+                <div className='flex flex-col justify-center gap-1'>
+                    <label className='text-sm font-bold text-gray-800'>Sehir</label>
+                    <input onChange={e=> setDestination(e.target.value)} value={destination} list='destinations' id="destinationInput" type="text" placeholder="Sehir arayin" className="rounded border border-gray-200 px-3 py-2 text-sm outline-none" />
                     <datalist id='destinations'>
                         {cities.map((city, index) => (
                             <option value={city} key={index} />
@@ -55,21 +56,26 @@ const onSearch = async (e) => {
                     </datalist>
                 </div>
 
-                <div className='flex flex-col justify-center'>
+                <div className='flex flex-col justify-center gap-1'>
+                    <label className='text-sm font-bold text-gray-800'>{'Giri\u015F Tarihi'}</label>
                     <input onChange={e => setCheckIn(e.target.value)} value={checkIn} id="checkIn" type="date" className=" rounded border border-gray-200 px-3 py-2 text-sm outline-none" />
                 </div>
 
-                <div className='flex flex-col justify-center'>
+                <div className='flex flex-col justify-center gap-1'>
+                    <label className='text-sm font-bold text-gray-800'>{'\u00C7\u0131k\u0131\u015F Tarihi'}</label>
                     <input onChange={e => setCheckOut(e.target.value)} value={checkOut} id="checkOut" type="date" className=" rounded border border-gray-200 px-3 py-2 text-sm outline-none" />
                 </div>
 
-                <div className='flex flex-col justify-center'>
-                    <input onChange={e => setGuests(e.target.value)} value={guests} min={1} max={10} id="guests" type="number" className=" rounded border border-gray-200 px-3 py-2 text-sm outline-none max-w-24" />
+                <div className='flex flex-col justify-center gap-1'>
+                    <label className='text-sm font-bold text-gray-800'>Konuk</label>
+                    <input onChange={e => setGuests(e.target.value)} value={guests} min={1} max={10} id="guests" type="number" placeholder="Konuk" className=" rounded border border-gray-200 px-3 py-2 text-sm outline-none max-w-24" />
                 </div>
 
-                <button className='flex items-center justify-center gap-1 rounded-md bg-black py-3 px-4 text-white my-auto cursor-pointer max-md:w-full max-md:py-1' >
-                    <span>Arama</span>
-                </button>
+                <div className='flex flex-col justify-end'>
+                    <button className='flex items-center justify-center gap-1 rounded-md bg-black py-2 px-4 text-white cursor-pointer max-md:w-full h-[38px]' >
+                        <span>Arama</span>
+                    </button>
+                </div>
             </form>
 
         </div>

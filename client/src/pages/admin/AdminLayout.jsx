@@ -10,7 +10,7 @@ const AdminLayout = () => {
 
     useEffect(() => {
         if (userDataLoaded && !isAdmin) {
-            navigate('/')
+            navigate('/admin/login')
         }
     }, [isAdmin, userDataLoaded, navigate])
 

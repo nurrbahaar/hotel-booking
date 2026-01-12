@@ -46,7 +46,7 @@ const Reservations = () => {
     }
 
     useEffect(() => {
-        if (user) {
+        if (user || localStorage.getItem('ownerToken')) {
             fetchBookings();
         }
     }, [user]);

@@ -42,6 +42,23 @@ const PendingHotels = () => {
         }
     }
 
+    const rejectHotel = async (hotelId) => {
+        try {
+            const token = await getToken()
+            const { data } = await axios.post('/api/hotels/reject', { hotelId }, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+            if (data.success) {
+                toast.success(data.message)
+                fetchPendingHotels()
+            } else {
+                toast.error(data.message)
+            }
+        } catch (error) {
+            toast.error(error.message)
+        }
+    }
+
     useEffect(() => {
         fetchPendingHotels()
     }, [])
@@ -50,7 +67,7 @@ const PendingHotels = () => {
 
     return (
         <div>
-            <h1 className='text-2xl font-bold mb-4'>Pending Hotels</h1>
+            <h1 className='text-2xl font-bold mb-4'>Hotel Approvals</h1>
             <div className='overflow-x-auto'>
                 <table className='min-w-full bg-white border border-gray-200'>
                     <thead>
@@ -67,12 +84,18 @@ const PendingHotels = () => {
                                 <td className='py-2 px-4'>{hotel.name}</td>
                                 <td className='py-2 px-4'>{hotel.owner?.name || hotel.owner?.email || 'Unknown'}</td>
                                 <td className='py-2 px-4'>{hotel.address?.city}, {hotel.address?.country}</td>
-                                <td className='py-2 px-4'>
+                                <td className='py-2 px-4 flex gap-2'>
                                     <button 
                                         onClick={() => approveHotel(hotel._id)}
                                         className='bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600'
                                     >
                                         Approve
+                                    </button>
+                                    <button 
+                                        onClick={() => rejectHotel(hotel._id)}
+                                        className='bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600'
+                                    >
+                                        Reject
                                     </button>
                                 </td>
                             </tr>

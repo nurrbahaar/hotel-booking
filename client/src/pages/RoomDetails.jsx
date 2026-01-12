@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { roomsDummyData, assets, roomCommonData , facilityIcons} from '../assets/assets';
 import StarRating from '../components/StarRating';
+import Reviews from '../components/Reviews';
 import { useAppContext } from '../conext/AppContext';
 import toast from 'react-hot-toast';
 import RoomDetailsSkeleton from '../components/RoomDetailsSkeleton';
@@ -57,26 +58,28 @@ const RoomDetails = () => {
                 await checkAvailability();
             }
             else {
-                const { data } = await axios.post('/api/bookings/book', {
-                    room: id,
-                    checkInDate,
-                    checkOutDate,
-                    guests,
-                    paymentMethod: 'pay at hotel'
-                }, { headers: { Authorization: `Bearer ${await getToken()}` } })
+                // Calculate total price
+                const start = new Date(checkInDate);
+                const end = new Date(checkOutDate);
+                const timeDiff = end.getTime() - start.getTime();
+                const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                const totalPrice = nights * room.pricePerNight;
 
-                if (data?.success) {
-                    toast.success(data.message);
-                    navigate('/my-bookings')
-                    scrollTo(0, 0);
-                }
-                else {
-                    toast.success(data.message);
-                }
+                // Navigate to payment page with booking details
+                navigate('/payment', { 
+                    state: { 
+                        room, 
+                        checkInDate, 
+                        checkOutDate, 
+                        guests, 
+                        totalPrice,
+                        nights
+                    } 
+                });
             }
         }
         catch (error) {
-            toast.error("Rezervasyon sirasinda bir hata olustu");
+            toast.error("Bir hata olu�tu");
         }
     }
     useEffect(() => {
@@ -103,10 +106,10 @@ const RoomDetails = () => {
                 </h1>
             </div>
 
-            {/* Yıldız ve Yorumlar */}
+            {/* Y�ld�z ve Yorumlar */}
             <div className='flex items-center gap-4 mt-2'>
-                <StarRating />
-                <p className='ml-2'>200+ reviews</p>
+                <StarRating rating={room.hotel?.starRating || 0} />
+                <p className='ml-2'>{room.hotel?.numReviews || 0} reviews</p>
             </div>
 
             {/* Konum */}
@@ -146,18 +149,25 @@ const RoomDetails = () => {
                 <div className='flex flex-col '>
                     <h1 className='text-3xl md:text-4xl font-playfair '>Experience Luxury Like Never Before</h1>
 
-                    {/* Eğer room.facilities varsa haritala, yoksa hata vermesin diye kontrol eklendi */}
-                    {room.facilities && room.facilities.map((item, index) => (
-                        <div key={index} >
-                            {/* facilityIcons import edilmemiş olabilir, bu yüzden hata almamak için kontrol eklendi */}
-                            {/* <img src={facilityIcons[item]} alt={item} className='w-5 h-5' /> */}
-                            <p className='text-xs'>{item} </p>
-                        </div>
-                    ))}
+                    {/* E�er room.amenities varsa haritala, yoksa hata vermesin diye kontrol eklendi */}
+                    <div className="flex flex-wrap gap-4 mt-6">
+                        {room.amenities && room.amenities.map((item, index) => {
+                            const icon = facilityIcons[item] || 
+                                       facilityIcons[item.toUpperCase()] || 
+                                       facilityIcons[item.toLocaleUpperCase('tr-TR')] || 
+                                       assets.starIconFilled;
+                            return (
+                                <div key={index} className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100 shadow-sm">
+                                    <img src={icon} alt={item} className='w-5 h-5 opacity-75' />
+                                    <p className='text-xs font-medium text-gray-700 uppercase'>{item}</p>
+                                </div>
+                            )
+                        })}
+                    </div>
                 </div>
             </div>
             <div>
-                <p className='text-2xl font-medium' >{room.pricePerNight} TL/night</p>
+                <p className='text-2xl font-medium' >{room.pricePerNight} TL/gece</p>
 
             </div>
             {/*  check in check out */}
@@ -203,36 +213,18 @@ const RoomDetails = () => {
                     {room.description}
                 </p>
                 <p>
-                    Konuklarimiz icin ozenle tasarlanmis bu odada konfor ve sikligi bir arada bulacaksiniz. 
-                    Modern imkanlar, ferah yasam alanlari ve essiz manzarasi ile unutulmaz bir konaklama deneyimi sizi bekliyor. 
-                    Otelimiz, sehrin en gozde noktalarina yakin konumuyla hem is hem de tatil amacli seyahatleriniz icin mukemmel bir tercihtir.
+                    {`Konuklar\u0131m\u0131z i\u00E7in \u00F6zenle tasarlanm\u0131\u015F bu odada konfor ve \u015F\u0131kl\u0131\u011F\u0131 bir arada bulacaks\u0131n\u0131z.`}
+                    {` Modern imkanlar, ferah ya\u015Fam alanlar\u0131 ve e\u015Fsiz manzaras\u0131 ile unutulmaz bir konaklama deneyimi sizi bekliyor.`}
+                    {` Otelimiz, \u015Fehrin en g\u00F6zde noktalar\u0131na yak\u0131n konumuyla hem i\u015F hem de tatil ama\u00E7l\u0131 seyahatleriniz i\u00E7in m\u00FCkemmel bir tercihtir.`}
                 </p>
             </div>
-            {/* hosted by */}
-            <div className='flex flex-col items-start  gap-4'>
-                <img src={room.hotel?.owner?.image || assets.userIcon} alt="host" className='h-14 w-14 md:h-18 rounded-full' />
-                <div>
-                    <p className='text-lg md:text-xl '>Hosted By {room.hotel?.name}</p>
-                    <div className='flex items-center mt-1'>
-                        <StarRating />
-                        <p className='ml-2'>200+ reviews</p>
-                    </div>
 
-
-                </div>
+            {/* Reviews Section */}
+            <div className="max-w-3xl">
+                {room.hotel && <Reviews hotelId={room.hotel._id} />}
             </div>
-            <button 
-                onClick={() => {
-                    if (room.hotel?.phone) {
-                        window.location.href = `tel:${room.hotel.phone}`;
-                    } else {
-                        toast.error("Contact information not available");
-                    }
-                }}
-                className='px-6 py-2.5 mt-4 rounded text-white bg-primary hover:bg-primary-dull transition-all cursor-pointer'
-            >
-                Contact now
-            </button>
+
+
         </div >
     ) : null;// Ternary operatörü kapatıldı
 }

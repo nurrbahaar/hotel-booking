@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { assets, facilityIcons } from '../assets/assets';
 import StarRating from '../components/StarRating';
@@ -34,7 +34,7 @@ const RadioButton = ({ label, selected, onChange }) => {
 
 const AllRooms = () => {
     const [searchParams, setSearchParams] = useSearchParams()
-    const { rooms, navigate, currency, loading } = useAppContext();
+    const { rooms, navigate, currency, loading, axios } = useAppContext();
 
     console.log("AllRooms - rooms:", rooms);
 
@@ -43,25 +43,67 @@ const AllRooms = () => {
     const [selectedTypes, setSelectedTypes] = useState([]);
     const [selectedPriceRanges, setSelectedPriceRanges] = useState([]);
     const [selectedSort, setSelectedSort] = useState('');
+    const [bookedRoomIds, setBookedRoomIds] = useState([]);
+    const [searchDestination, setSearchDestination] = useState(searchParams.get('destination') || '');
+
+    useEffect(() => {
+        setSearchDestination(searchParams.get('destination') || '');
+    }, [searchParams]);
+
+    const handleSearchDestinationChange = (e) => {
+        const value = e.target.value;
+        setSearchDestination(value);
+        setSearchParams(prev => {
+            const newParams = new URLSearchParams(prev);
+            if (value) {
+                newParams.set('destination', value);
+            } else {
+                newParams.delete('destination');
+            }
+            return newParams;
+        }, { replace: true });
+        setCurrentPage(1);
+    };
+
+    useEffect(() => {
+        const fetchBookedRooms = async () => {
+            const checkIn = searchParams.get('checkIn');
+            const checkOut = searchParams.get('checkOut');
+
+            if (checkIn && checkOut) {
+                try {
+                    const { data } = await axios.get(`/api/bookings/booked-rooms?checkIn=${checkIn}&checkOut=${checkOut}`);
+                    if (data.success) {
+                        setBookedRoomIds(data.bookedRoomIds);
+                    }
+                } catch (error) {
+                    console.error("Error fetching booked rooms:", error);
+                }
+            } else {
+                setBookedRoomIds([]);
+            }
+        };
+        fetchBookedRooms();
+    }, [searchParams, axios]);
     
     // --- PAGINATION STATE ---
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
-    const roomTypes = ['Standart Oda', 'Premium Suit', 'Deluxe Oda', 'Aile Odasi'];
+    const roomTypes = ['Standart Oda', 'Premium Suit', 'Deluxe Oda', 'Aile Odas\u0131'];
     const priceRanges = ['0 - 1000 TL', '1001 - 3000 TL', '3001 - 5000 TL', '5001 - 10000 TL', '10001+ TL'];
     const sortOptions = [
         'Fiyat: Artan',
         'Fiyat: Azalan',
-        'Puan: Yuksekten Dusuge',
-        'Puan: Dusukten Yuksege',
+        'Puan: Y\u00FCksekten D\u00FC\u015F\u00FC\u011Fe',
+        'Puan: D\u00FC\u015F\u00FCkten Y\u00FCkse\u011Fe',
     ];
 
     const roomTypeMapping = {
         'Standart Oda': 'Standard Room',
         'Premium Suit': 'Premium Suite',
         'Deluxe Oda': 'Deluxe Room',
-        'Aile Odasi': 'Family Room'
+        'Aile Odas\u0131': 'Family Room'
     };
 
     // --- FILTERING LOGIC ---
@@ -70,6 +112,11 @@ const AllRooms = () => {
 
         // Filter out rooms with missing hotel data
         tempRooms = tempRooms.filter(room => room.hotel);
+
+        // Filter out booked rooms
+        if (bookedRoomIds.length > 0) {
+            tempRooms = tempRooms.filter(room => !bookedRoomIds.includes(room._id));
+        }
 
         // 1. Filter by Destination (from URL)
         const destination = searchParams.get('destination');
@@ -92,8 +139,12 @@ const AllRooms = () => {
         if (selectedTypes.length > 0) {
             tempRooms = tempRooms.filter(room =>
                 selectedTypes.some(type => {
-                    const englishType = roomTypeMapping[type] || type;
-                    return room.roomType?.toLowerCase().includes(englishType.toLowerCase());
+                    // Check if room type matches either the selected Turkish label OR the mapped English label
+                    const englishType = roomTypeMapping[type];
+                    const searchTerms = [type.toLowerCase()];
+                    if (englishType) searchTerms.push(englishType.toLowerCase());
+
+                    return searchTerms.some(term => room.roomType?.toLowerCase().includes(term));
                 })
             );
         }
@@ -118,9 +169,9 @@ const AllRooms = () => {
             tempRooms.sort((a, b) => (Number(a.pricePerNight) || 0) - (Number(b.pricePerNight) || 0));
         } else if (selectedSort === 'Fiyat: Azalan') {
             tempRooms.sort((a, b) => (Number(b.pricePerNight) || 0) - (Number(a.pricePerNight) || 0));
-        } else if (selectedSort === 'Puan: Yuksekten Dusuge') {
+        } else if (selectedSort === 'Puan: Yüksekten Düþüðe') {
             tempRooms.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0));
-        } else if (selectedSort === 'Puan: Dusukten Yuksege') {
+        } else if (selectedSort === 'Puan: Düþükten Yükseðe') {
             tempRooms.sort((a, b) => (Number(a.rating) || 0) - (Number(b.rating) || 0));
         }
 
@@ -133,6 +184,7 @@ const AllRooms = () => {
         setSelectedSort('');
         setSearchParams({});
         setCurrentPage(1);
+        setSearchDestination('');
     };
 
     // --- PAGINATION LOGIC ---
@@ -204,16 +256,32 @@ const AllRooms = () => {
                                 </p>
 
                                 <div className='flex items-center'>
-                                    <StarRating rating={room.rating} />
-                                    <p className='ml-2 text-sm text-gray-500'>200+ reviews</p>
+                                    <StarRating rating={room.hotel?.starRating || 0} />
+                                    <p className='ml-2 text-sm text-gray-500'>({room.hotel?.numReviews || 0} reviews)</p>
                                 </div>
 
                                 <div className='flex items-center gap-1 text-gray-500 mt-2 text-sm'>
                                     <img src={assets.locationIcon} alt="location-icon" className='w-4 h-4' />
                                     <span> {(() => {
                                         const address = room.hotel?.address;
-                                        const addressText = address?.city || address?.line || (typeof address === 'string' ? address : '') || 'No Address';
-                                        return addressText.replace(/^\?stanbul/i, 'Ýstanbul').replace(/^stanbul/i, 'Ýstanbul');
+                                        if (!address) return '—';
+                                        
+                                        let city = '';
+                                        let country = '';
+
+                                        if (typeof address === 'string') {
+                                            // Fallback if address is string
+                                            return address.replace('T?rkiye', 'Türkiye').replace('Trkiye', 'Türkiye');
+                                        } else {
+                                            city = address.city || '';
+                                            country = address.country || '';
+                                        }
+
+                                        // Fix specific known corruptions
+                                        city = city.replace(/^\?stanbul/i, 'Ýstanbul').replace(/^stanbul/i, 'Ýstanbul');
+                                        country = country.replace('T?rkiye', 'Türkiye').replace('Trkiye', 'Türkiye');
+
+                                        return `${city} ${country}`;
                                     })()}</span>
                                 </div>
 
@@ -226,7 +294,7 @@ const AllRooms = () => {
                                     ))}
                                 </div>
                                 <div className='flex items-center justify-between mt-2'>
-                                    <p className='text-xl font-medium text-gray-800'> {room.pricePerNight} TL <span className='text-sm text-gray-500 font-normal'>/night</span> </p>
+                                    <p className='text-xl font-medium text-gray-800'> {room.pricePerNight} TL <span className='text-sm text-gray-500 font-normal'>/gece</span> </p>
                                     <button onClick={() => navigate(`/rooms/${room._id}?${searchParams.toString()}`)} className='bg-black text-white px-4 py-2 rounded-full text-sm hover:bg-gray-800 transition-colors'>
                                         View Details
                                     </button>
@@ -245,15 +313,31 @@ const AllRooms = () => {
                             &lt; Önceki
                         </button>
                         
-                        {[...Array(totalPages)].map((_, i) => (
-                            <button
-                                key={i}
-                                onClick={() => paginate(i + 1)}
-                                className={`w-10 h-10 rounded border ${currentPage === i + 1 ? 'bg-black text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-                            >
-                                {i + 1}
-                            </button>
-                        ))}
+                        {(() => {
+                            let pages = [];
+                            if (totalPages <= 7) {
+                                pages = [...Array(totalPages)].map((_, i) => i + 1);
+                            } else {
+                                if (currentPage <= 4) {
+                                    pages = [1, 2, 3, 4, 5, '...', totalPages];
+                                } else if (currentPage >= totalPages - 3) {
+                                    pages = [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+                                } else {
+                                    pages = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+                                }
+                            }
+                            
+                            return pages.map((page, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => typeof page === 'number' && paginate(page)}
+                                    disabled={typeof page !== 'number'}
+                                    className={`w-10 h-10 rounded border ${currentPage === page ? 'bg-black text-white' : typeof page !== 'number' ? 'border-none bg-transparent cursor-default' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                                >
+                                    {page}
+                                </button>
+                            ));
+                        })()}
 
                         <button 
                             onClick={() => paginate(currentPage + 1)} 
@@ -288,6 +372,18 @@ const AllRooms = () => {
 
                     <div className={`${openFilters ? 'h-auto opacity-100 mt-4' : 'h-0 opacity-0 lg:h-auto lg:opacity-100 lg:mt-0'} overflow-hidden transition-all duration-300`}>
 
+                        {/* Search Filter */}
+                        <div className='mb-6'>
+                            <p className='font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wider'>Otel Ara</p>
+                            <input 
+                                type="text" 
+                                value={searchDestination}
+                                onChange={handleSearchDestinationChange}
+                                placeholder="Otel ismi veya sehir..."
+                                className='w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:border-black transition-colors'
+                            />
+                        </div>
+
                         {/* Room Type Filter */}
                         <div className='mb-6'>
                             <p className='font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wider'>Oda Tipi</p>
@@ -303,7 +399,7 @@ const AllRooms = () => {
 
                         {/* Price Range Filter */}
                         <div className='mb-6'>
-                            <p className='font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wider'>Fiyat Aralýðý</p>
+                            <p className='font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wider'>{'Fiyat Aral\u0131\u011F\u0131'}</p>
                             {priceRanges.map((range, index) => (
                                 <CheckBox
                                     key={index}
@@ -316,7 +412,7 @@ const AllRooms = () => {
 
                         {/* Sort Option */}
                         <div>
-                            <p className='font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wider'>Siralama</p>
+                            <p className='font-semibold text-gray-800 mb-3 text-sm uppercase tracking-wider'>{'S\u0131ralama'}</p>
                             {sortOptions.map((option, index) => (
                                 <RadioButton
                                     key={index}

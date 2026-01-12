@@ -4,6 +4,7 @@ const userSchema = new mongoose.Schema({
     _id: { type: String, required: true },
     username: { type: String, required: true },
     email: { type: String, required: true },
+    password: { type: String }, // Added for manual login
     image: { type: String, required: true },
     role: { type: String, enum: ["user", "hotelOwner", "admin"], default: "user" }, // Legacy support
     roles: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Role' }], // Reference to Role model

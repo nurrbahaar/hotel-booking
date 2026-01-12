@@ -66,12 +66,12 @@ const Navbar = () => {
 
                 <button className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${isScrolled ? 'text-black' : 'text-white'} transition-all`} onClick={() => {
                     if (user) {
-                        isOwner ? navigate('/owner') : setShowHotelReg(true)
+                        setShowHotelReg(true)
                     } else {
                         openSignIn()
                     }
                 }}>
-                    {isOwner ? "Panel" : "Register your hotel"}
+                    Register your hotel
                 </button>
             </div>
 
@@ -81,7 +81,7 @@ const Navbar = () => {
                     <UserButton>
                         <UserButton.MenuItems>
                             <UserButton.Action
-                                label="My Bookings"
+                                label="Rezervasyonlarým"
                                 labelIcon={<BookIcon />}
                                 onClick={() => navigate('/my-bookings')}
                             />
@@ -102,7 +102,7 @@ const Navbar = () => {
                 {user && <UserButton>
                     <UserButton.MenuItems>
                         <UserButton.Action
-                            label="My Bookings"
+                            label="Rezervasyonlarým"
                             labelIcon={<BookIcon />}
                             onClick={() => navigate('/my-bookings')}
                         />

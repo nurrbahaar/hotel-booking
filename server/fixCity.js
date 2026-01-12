@@ -19,6 +19,7 @@ const fixCity = async () => {
             
             // Regex to match ?stanbul or similar (matches any single char before stanbul)
             const regex = /.?stanbul/i;
+            const regexCountry = /T.?rkiye/i;
 
             // Check legacy city
             if (hotel.city && regex.test(hotel.city)) {
@@ -33,6 +34,14 @@ const fixCity = async () => {
                 hotel.address.city = 'Ýstanbul';
                 updated = true;
             }
+
+            // Check address.country
+            if (hotel.address && hotel.address.country && regexCountry.test(hotel.address.country)) {
+                console.log(`Found bad country in ${hotel.name}: ${hotel.address.country}`);
+                hotel.address.country = 'Türkiye';
+                updated = true;
+            }
+
 
             if (updated) {
                 await hotel.save();

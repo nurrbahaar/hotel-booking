@@ -12,6 +12,8 @@ import hotelRouter from "./routes/hotelRoutes.js";
 import roomRouter from "./routes/roomRoutes.js";
 import bookingRouter from "./routes/bookingRoutes.js";
 import adminRouter from "./routes/adminRoutes.js";
+import authRouter from "./routes/authRoutes.js";
+import reviewRouter from "./routes/reviewRoutes.js";
 
 // Uygulama Ayarlarý
 const app = express()
@@ -34,5 +36,7 @@ app.use('/api/hotels', hotelRouter)
 app.use('/api/rooms', roomRouter)
 app.use('/api/bookings', bookingRouter)
 app.use('/api/admin', adminRouter)
+app.use('/api/auth', authRouter)
+app.use('/api/reviews', reviewRouter)
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -39,7 +39,7 @@ const MyBookings = () => {
 
   return (
     <div className='py-28 md:py-32 px-4 md:px-24 xl:px-32'>
-      <Title title='Rezervasyonlarim' subtitle='Gecmis ve gelecek rezervasyonlariniz' align='left' />
+      <Title Title='Rezervasyonlarim' subtitle='Gecmis ve gelecek rezervasyonlariniz' align='left' />
 
       <div className='mt-8'>
         <div className='hidden md:flex border-b-2 border-gray-300 pb-4 font-semibold text-gray-700'>
@@ -61,7 +61,12 @@ const MyBookings = () => {
               {/* Hotels column */}
               <div className='md:w-1/3 flex items-start gap-4 w-full'>
                 <img
-                  src={booking.room?.images?.[0] ?? assets.placeholderImage}
+                  src={
+                    booking.room?.images?.[0] && 
+                    (booking.room.images[0].startsWith('http') || booking.room.images[0].startsWith('/')) 
+                    ? booking.room.images[0] 
+                    : assets.placeholderImage
+                  }
                   alt='hotel-img'
                   className='w-24 h-16 object-cover rounded-md flex-shrink-0'
                 />
@@ -77,8 +82,8 @@ const MyBookings = () => {
                     <span>
                       {booking.hotel?.address 
                         ? (typeof booking.hotel.address === 'string' 
-                            ? booking.hotel.address 
-                            : `${booking.hotel.address.city || ''} ${booking.hotel.address.country || ''}`) 
+                            ? booking.hotel.address.replace('T?rkiye', 'Türkiye') 
+                            : `${booking.hotel.address.city || ''} ${booking.hotel.address.country?.replace('T?rkiye', 'Türkiye') || ''}`) 
                         : '—'}
                     </span>
                   </div>
